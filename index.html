@@ -1,0 +1,2256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>window.BB_HASH0 = location.hash;</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bunk Budget</title>
+<meta name="description" content="See how many lectures you can skip in each subject and still stay above your attendance cutoff.">
+<meta name="theme-color" content="#FBFBFD" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bunk Budget">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
+<style>
+/* Apple-style take: light first, system type, generous space, grouped lists, activity rings.
+   Real SF Pro is used where the device has it; Inter stands in elsewhere. */
+:root {
+  --bg: #FBFBFD; --bg-2: #F5F5F7; --card: #FFFFFF; --text: #1D1D1F; --muted: #6E6E73; --faint: #86868B;
+  --sep: rgba(60,60,67,.14); --fill: rgba(120,120,128,.12);
+  --blue: #0071E3; --blue-press: #0077ED; --green: #34C759; --orange: #FF9500; --red: #FF3B30;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  --ease: cubic-bezier(.32,.72,0,1);
+  --shadow: 0 2px 6px rgba(0,0,0,.04), 0 12px 32px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --bg-2: #0B0B0C; --card: #1C1C1E; --text: #F5F5F7; --muted: #A1A1A6; --faint: #8E8E93;
+    --sep: rgba(84,84,88,.6); --fill: rgba(118,118,128,.24);
+    --blue: #2997FF; --blue-press: #47A6FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A;
+    --shadow: none; color-scheme: dark; --seg-on: #636366;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --bg-2: #0B0B0C; --card: #1C1C1E; --text: #F5F5F7; --muted: #A1A1A6; --faint: #8E8E93;
+  --sep: rgba(84,84,88,.6); --fill: rgba(118,118,128,.24);
+  --blue: #2997FF; --blue-press: #47A6FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A;
+  --shadow: none; color-scheme: dark; --seg-on: #636366;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.47 var(--font); letter-spacing: -0.022em; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--blue) 45%, transparent); outline-offset: 2px; border-radius: 10px; }
+.wrap { width: 100%; max-width: 980px; margin: 0 auto; padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- global nav: thin, frosted ---------- */
+.gnav { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--sep); padding-top: env(safe-area-inset-top, 0px); }
+.gnav .wrap { height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 17px; color: var(--text); white-space: nowrap; }
+.logo:hover { text-decoration: none; }
+.logo svg { width: 22px; height: 22px; }
+.gnav nav { display: flex; align-items: center; gap: 22px; font-size: 13px; }
+.gnav nav a { color: var(--text); opacity: .8; white-space: nowrap; }
+.gnav nav a:hover { opacity: 1; text-decoration: none; }
+.gnav nav a.on { opacity: 1; font-weight: 500; }
+@media (max-width: 520px) { .gnav nav .opt { display: none; } }
+
+/* ---------- buttons ---------- */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 980px; padding: 11px 22px; font-size: 17px; font-weight: 400; background: var(--blue); color: #fff; transition: background .2s, transform .2s var(--ease); }
+.pill:hover { background: var(--blue-press); text-decoration: none; }
+.pill:active { transform: scale(.97); }
+.pill.small { padding: 7px 15px; font-size: 14px; }
+.pill.ghost { background: transparent; color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.pill.ghost:hover { background: color-mix(in srgb, var(--blue) 8%, transparent); }
+.pill.gray { background: var(--fill); color: var(--text); }
+.pill:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.more { font-size: 17px; }
+.more::after { content: " ›"; }
+
+/* ---------- views ---------- */
+.view { animation: view-in .6s var(--ease) both; }
+@keyframes view-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- home ---------- */
+.hero { text-align: center; padding-block: 72px 24px; }
+.eyebrow { font-size: 17px; font-weight: 600; color: var(--orange); margin: 0 0 6px; }
+.hero h1 { font: 700 clamp(48px, 9vw, 80px)/1.05 var(--display); letter-spacing: -0.015em; margin: 0; }
+.hero p.sub { font-size: clamp(21px, 2.6vw, 28px); line-height: 1.25; color: var(--muted); margin: 14px auto 0; max-width: 30ch; letter-spacing: .004em; }
+.hero .ctas { display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 30px; flex-wrap: wrap; }
+
+/* hero title: words rise and un-blur one after another */
+.hero-title span { display: inline-block; }
+.anim .hero-title span { opacity: 0; filter: blur(12px); transform: translateY(24px); animation: word-in 1s var(--ease) forwards; }
+.anim .hero-title span:nth-child(2) { animation-delay: .12s; } .anim .hero-title span:nth-child(3) { animation-delay: .24s; }
+.anim .hero .sub, .anim .hero .ctas, .anim .hero .eyebrow { opacity: 0; animation: word-in 1s var(--ease) .45s forwards; }
+@keyframes word-in { to { opacity: 1; filter: none; transform: none; } }
+
+/* the phone: a whole iPhone, tilted back, straightening as you scroll */
+.phone-stage { margin: 56px auto 0; perspective: 1400px; --hp: 0; }
+.phone { width: min(300px, 78vw); aspect-ratio: 9 / 19.5; margin: 0 auto; border-radius: 52px; padding: 11px; background: linear-gradient(145deg, #2c2c2e, #0b0b0c); box-shadow: 0 50px 100px rgba(0,0,0,.22), inset 0 0 0 1.5px #48484a, inset 0 0 0 4px #1c1c1e;
+  transform: rotateX(calc((1 - var(--hp)) * 22deg)) scale(calc(.9 + var(--hp) * .1)) translateY(calc((1 - var(--hp)) * 30px)); transform-origin: 50% 0; transition: transform .1s linear; }
+.phone .screen { height: 100%; border-radius: 42px; background: var(--bg-2); overflow: hidden; display: flex; flex-direction: column; color: var(--text); text-align: left; }
+.statusbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px 6px; font-size: 13px; font-weight: 600; }
+.statusbar .island { width: 84px; height: 24px; border-radius: 14px; background: #000; }
+.sb-icons { display: flex; gap: 3px; align-items: end; }
+.sb-icons i { width: 4px; background: var(--text); border-radius: 1px; }
+.sb-icons i:nth-child(1) { height: 5px; } .sb-icons i:nth-child(2) { height: 8px; } .sb-icons i:nth-child(3) { height: 11px; }
+.ph-body { flex: 1; padding: 6px 14px 0; display: grid; gap: 12px; align-content: start; overflow: hidden; }
+.ph-title { font: 700 26px/1.1 var(--display); padding-left: 4px; }
+.ph-sum { background: var(--card); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; }
+.ph-sum div { display: grid; min-width: 0; }
+.ph-sum .k { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-sum b { font: 700 28px/1.1 var(--display); }
+.ph-list { background: var(--card); border-radius: 16px; overflow: hidden; }
+.ph-list .r { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+.ph-list .r + .r { border-top: 1px solid var(--sep); }
+.ph-list .t { flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-list .t small { display: block; color: var(--muted); font-size: 11px; }
+.ph-list b { font-size: 17px; font-weight: 600; }
+.tabbar { display: flex; justify-content: space-around; padding: 10px 8px 22px; border-top: 1px solid var(--sep); background: color-mix(in srgb, var(--card) 85%, transparent); font-size: 11px; color: var(--faint); }
+.tabbar .on { color: var(--blue); font-weight: 600; }
+
+/* tiles lean toward the pointer */
+.tilt { transition: transform .5s var(--ease), box-shadow .5s var(--ease), opacity .9s var(--ease); }
+.tilt:hover { box-shadow: 0 20px 50px rgba(0,0,0,.08); }
+.hero-tile { background: linear-gradient(160deg, color-mix(in srgb, var(--red) 10%, var(--bg-2)), var(--bg-2) 60%); }
+.hero-tile .huge { font: 700 clamp(40px, 6vw, 64px)/1.02 var(--display); letter-spacing: -0.02em; }
+.hero-tile .huge .count { color: var(--red); font-variant-numeric: tabular-nums; }
+
+/* try it */
+.tryit { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; background: var(--bg-2); border-radius: 28px; padding: 36px; }
+.try-controls { display: grid; gap: 14px; }
+.try-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--card); border-radius: 14px; padding: 12px 14px; font-size: 17px; flex-wrap: wrap; }
+.try-out { display: grid; justify-items: center; gap: 14px; text-align: center; }
+.try-answer { margin: 0; font: 600 clamp(22px, 3vw, 28px)/1.2 var(--display); max-width: 18ch; }
+.try-answer span { display: block; font: 400 15px var(--font); color: var(--muted); margin-top: 6px; }
+@media (max-width: 760px) { .tryit { grid-template-columns: 1fr; padding: 22px; } }
+
+/* app: semester card, review flags */
+.sem { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; font-size: 15px; }
+.sem label { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.sem input { border: 1px solid var(--sep); background: var(--bg-2); border-radius: 10px; padding: 7px 10px; font-size: 15px; color: var(--text); }
+.sem .hint-line { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; }
+.sheet tr.flag td { background: color-mix(in srgb, var(--orange) 10%, transparent); }
+.sheet tr.need td { background: color-mix(in srgb, var(--red) 9%, transparent); }
+.sheet .why { display: block; font-size: 12px; color: var(--orange); margin-top: 2px; }
+.sheet tr.need .why { color: var(--red); }
+.est { font-size: 13px; color: var(--muted); }
+
+section.band { padding-block: 96px 0; }
+.band h2 { font: 700 clamp(36px, 6vw, 56px)/1.07 var(--display); letter-spacing: -0.005em; margin: 0 0 14px; text-align: center; text-wrap: balance; }
+.band p.lead { text-align: center; color: var(--muted); font-size: 21px; max-width: 34ch; margin: 0 auto 48px; }
+.bento { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.tile { background: var(--bg-2); border-radius: 28px; padding: 32px 28px; display: grid; gap: 10px; align-content: start; min-height: 260px; }
+.tile .k { font-size: 14px; font-weight: 600; color: var(--muted); }
+.tile h3 { font: 600 28px/1.14 var(--display); margin: 0; letter-spacing: .004em; }
+.tile p { margin: 0; color: var(--muted); }
+.tile.wide { grid-column: span 2; }
+@media (max-width: 760px) { .bento { grid-template-columns: 1fr; } .tile.wide { grid-column: auto; } }
+
+.faq { max-width: 720px; margin: 0 auto; }
+.faq details { border-bottom: 1px solid var(--sep); padding: 20px 0; }
+.faq summary { list-style: none; cursor: pointer; font-size: 19px; font-weight: 600; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--blue); font-weight: 400; font-size: 24px; line-height: 1; transition: transform .3s var(--ease); }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq p { color: var(--muted); margin: 10px 0 0; }
+
+.final { text-align: center; padding-block: 110px 40px; }
+.final h2 { font: 700 clamp(40px, 7vw, 64px)/1.05 var(--display); margin: 0 0 24px; }
+
+footer { background: var(--bg-2); color: var(--faint); font-size: 12px; margin-top: 80px; padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px)); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+footer a { color: var(--muted); }
+
+/* ---------- about ---------- */
+.doc { max-width: 692px; margin: 0 auto; padding-block: 72px 0; }
+.doc h1 { font: 700 clamp(40px, 7vw, 56px)/1.07 var(--display); margin: 0 0 12px; }
+.doc .intro { font-size: 24px; line-height: 1.33; color: var(--muted); margin: 0 0 48px; }
+.doc h2 { font: 600 24px/1.2 var(--display); margin: 40px 0 10px; }
+.doc p, .doc li { color: var(--text); }
+.doc ul { padding-left: 20px; }
+.doc .eq { background: var(--bg-2); border-radius: 14px; padding: 14px 16px; font: 500 15px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow-x: auto; white-space: nowrap; margin: 8px 0; }
+
+/* ---------- sign in ---------- */
+.auth { max-width: 420px; margin: 0 auto; padding-block: 72px 0; text-align: center; }
+.auth .badge { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 18px; display: grid; place-items: center; background: linear-gradient(160deg, #3D8BFF, #0057D9); box-shadow: 0 10px 24px rgba(0,113,227,.3); }
+.auth .badge svg { width: 34px; height: 34px; }
+.auth h1 { font: 600 32px/1.12 var(--display); margin: 0 0 6px; }
+.auth .subt { color: var(--muted); margin: 0 0 26px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--fill); border-radius: 9px; padding: 2px; margin-bottom: 22px; position: relative; }
+.seg button { position: relative; z-index: 1; border: 0; background: transparent; border-radius: 7px; padding: 6px; font-size: 14px; font-weight: 500; }
+.seg .thumb { position: absolute; z-index: 0; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 7px; background: var(--card); box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 3px 1px rgba(0,0,0,.04); transition: transform .35s var(--ease); }
+.seg[data-on="1"] .thumb { transform: translateX(100%); }
+.fieldset { background: var(--card); border: 1px solid var(--sep); border-radius: 12px; overflow: hidden; text-align: left; }
+.fieldset label { display: block; position: relative; }
+.fieldset label + label { border-top: 1px solid var(--sep); }
+.fieldset input { width: 100%; border: 0; background: transparent; padding: 26px 48px 8px 16px; font-size: 17px; outline: none; }
+.fieldset span.lab { position: absolute; left: 16px; top: 8px; font-size: 12px; color: var(--faint); pointer-events: none; }
+.fieldset label:focus-within { box-shadow: inset 0 0 0 2px var(--blue); border-radius: 12px; }
+.eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border: 0; background: transparent; color: var(--faint); border-radius: 8px; display: grid; place-items: center; }
+.eye svg { width: 20px; height: 20px; }
+.hint { min-height: 20px; font-size: 13px; color: var(--faint); text-align: left; padding: 6px 4px 0; }
+.auth .pill.go { width: 100%; margin-top: 18px; padding: 13px; }
+.note { text-align: left; border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; background: var(--card); border: 1px solid var(--sep); display: grid; gap: 6px; }
+.note .t { font-weight: 600; font-size: 15px; }
+.note.error .t { color: var(--red); }
+.note.ok .t { color: var(--green); }
+.note .b { margin: 0; font-size: 15px; color: var(--muted); }
+.note .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.auth .links { display: flex; justify-content: center; gap: 22px; margin-top: 18px; font-size: 14px; }
+.textlink { border: 0; background: none; padding: 0; color: var(--blue); font-size: 14px; }
+.textlink:hover { text-decoration: underline; }
+.fine { color: var(--faint); font-size: 12px; margin-top: 26px; }
+
+/* ---------- app ---------- */
+.app { padding-block: 28px 0; display: grid; gap: 28px; }
+.app-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.app-head h1 { font: 700 40px/1.1 var(--display); margin: 0; letter-spacing: .005em; }
+.app-head .who { color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 12px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+.card { background: var(--card); border-radius: 22px; padding: 22px; box-shadow: var(--shadow); }
+.summary { display: flex; align-items: center; gap: 24px; }
+.summary .stats { display: grid; gap: 14px; min-width: 0; }
+.summary .stats div { display: grid; }
+.summary .k { font-size: 13px; color: var(--muted); font-weight: 500; }
+.summary .v { font: 600 28px/1.15 var(--display); }
+.summary .v small { font-size: 15px; color: var(--muted); font-weight: 400; }
+.ring { flex: none; }
+.ring circle { fill: none; stroke-linecap: round; }
+.ring .track { stroke: var(--fill); }
+.ring .val { transition: stroke-dashoffset 1.2s var(--ease); }
+.ring text { fill: var(--text); font: 600 22px var(--display); text-anchor: middle; dominant-baseline: central; }
+.ring text.s { font-size: 11px; fill: var(--muted); font-weight: 500; }
+
+.upload { display: grid; gap: 14px; align-content: center; text-align: center; justify-items: center; border: 2px dashed transparent; transition: border-color .2s, background .2s; }
+.upload.over { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 6%, var(--card)); }
+.upload .ico { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: color-mix(in srgb, var(--blue) 12%, transparent); color: var(--blue); }
+.upload .ico svg { width: 28px; height: 28px; }
+.upload h2 { margin: 0; font: 600 21px/1.2 var(--display); }
+.upload p { margin: 0; color: var(--muted); font-size: 15px; }
+.upload .alts { display: flex; gap: 18px; justify-content: center; font-size: 14px; }
+.progress { width: 100%; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .25s; }
+.status { font-size: 14px; color: var(--muted); }
+.status.error { color: var(--red); }
+.subform { width: 100%; display: grid; gap: 10px; text-align: left; }
+.subform textarea, .subform input { width: 100%; border: 1px solid var(--sep); background: var(--bg-2); border-radius: 12px; padding: 11px 13px; font-size: 15px; }
+.subform textarea { min-height: 110px; font: 13px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; resize: vertical; }
+.subform .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.settings { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; font-size: 15px; }
+.settings > div { display: flex; align-items: center; gap: 10px; }
+.settings .k { color: var(--muted); }
+.stepper { display: inline-flex; align-items: center; background: var(--fill); border-radius: 9px; overflow: hidden; }
+.stepper button { border: 0; background: transparent; width: 36px; height: 32px; font-size: 20px; line-height: 1; color: var(--text); }
+.stepper button:active { background: var(--sep); }
+.stepper span { min-width: 3.2em; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.miniseg { display: inline-grid; grid-auto-flow: column; background: var(--fill); border-radius: 9px; padding: 2px; }
+.miniseg button { border: 0; background: transparent; border-radius: 7px; padding: 5px 12px; font-size: 14px; }
+.miniseg button[aria-pressed=true] { background: var(--seg-on, var(--card)); box-shadow: 0 3px 8px rgba(0,0,0,.12); font-weight: 500; }
+
+.listhead { display: flex; justify-content: space-between; align-items: baseline; margin: 0 6px 8px; }
+.listhead h2 { margin: 0; font: 600 22px var(--display); }
+.listhead span { font-size: 13px; color: var(--muted); }
+.group { background: var(--card); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
+.row { border-top: 1px solid var(--sep); }
+.row:first-child { border-top: 0; }
+.row-main { width: 100%; display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: none; border: 0; text-align: left; transition: background .2s; }
+.row-main:hover { background: color-mix(in srgb, var(--fill) 50%, transparent); }
+.row-main .t { flex: 1; min-width: 0; }
+.row-main .t b { display: block; font-weight: 500; font-size: 17px; overflow-wrap: break-word; }
+.row-main .t small { color: var(--muted); font-size: 14px; }
+.row-main .n { text-align: right; flex: none; }
+.row-main .n b { display: block; font: 600 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.row-main .n small { font-size: 12px; color: var(--muted); }
+.row-main .chev { flex: none; color: var(--faint); transition: transform .35s var(--ease); }
+.row.open .chev { transform: rotate(90deg); }
+.safe .n b { color: var(--green); } .tight .n b { color: var(--orange); } .below .n b { color: var(--red); }
+.detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s var(--ease); }
+.row.open .detail { grid-template-rows: 1fr; }
+.detail > div { overflow: hidden; }
+.detail-in { padding: 4px 18px 20px 82px; display: grid; gap: 16px; }
+@media (max-width: 560px) { .detail-in { padding-left: 18px; } }
+.detail .line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.detail .muted { color: var(--muted); font-size: 15px; margin: 0; }
+.detail .fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.detail .fields label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.detail .fields input { border: 1px solid var(--sep); background: var(--bg-2); border-radius: 10px; padding: 8px 10px; font-size: 15px; width: 100%; font-variant-numeric: tabular-nums; }
+.detail .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ok { color: var(--green); } .bad { color: var(--red); }
+.empty { padding: 56px 24px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+.empty b { font: 600 22px var(--display); }
+.empty p { margin: 0; color: var(--muted); max-width: 40ch; }
+
+/* sheet for checking what the screenshot gave */
+dialog { border: 0; padding: 0; background: var(--card); color: var(--text); border-radius: 22px; width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 40px); box-shadow: 0 30px 80px rgba(0,0,0,.3); }
+dialog[open] { animation: sheet .45s var(--ease); }
+@keyframes sheet { from { transform: translateY(40px); opacity: 0; } }
+dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(4px); }
+.sheet { padding: 22px; display: grid; gap: 14px; }
+.sheet h2 { margin: 0; font: 600 22px var(--display); }
+.sheet p { margin: 0; color: var(--muted); font-size: 15px; }
+.sheet table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.sheet th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 4px 6px; }
+.sheet td { padding: 4px 6px; }
+.sheet input[type=text], .sheet input[type=number] { width: 100%; border: 1px solid var(--sep); background: var(--bg-2); border-radius: 9px; padding: 7px 9px; font-size: 15px; }
+.sheet input[type=number] { width: 4.8em; font-variant-numeric: tabular-nums; }
+.sheet .acts { display: flex; justify-content: flex-end; gap: 10px; }
+.tablewrap { overflow-x: auto; }
+
+/* last synced: green under 3 days, amber 3 to 7, red after 7 */
+.synced { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border-radius: 14px; padding: 11px 16px; font-size: 15px; background: color-mix(in srgb, var(--c) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+.synced.fresh { --c: var(--green); } .synced.aging { --c: var(--orange); } .synced.stale { --c: var(--red); }
+.synced .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.synced span:nth-child(2) { flex: 1; min-width: 12em; }
+.synced.stale span:nth-child(2) { color: var(--red); font-weight: 500; }
+.nudge { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.nudge b { font: 600 17px var(--display); }
+.nudge p { margin: 4px 0 0; color: var(--muted); font-size: 15px; max-width: 52ch; }
+.nudge .acts { display: flex; gap: 8px; }
+.who { flex-wrap: wrap; justify-content: flex-end; }
+.homecard { margin-top: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.homecard .app-icon { border-radius: 12px; flex: none; }
+.homecard .hc-text { flex: 1; min-width: 14em; }
+.homecard b { font: 600 17px var(--display); }
+.homecard p { margin: 3px 0 0; color: var(--muted); font-size: 15px; }
+.homecard .steps { margin-top: 12px; }
+.install { text-align: center; justify-items: center; }
+.install .app-icon { border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+.install p { max-width: 34ch; }
+.install .acts { justify-content: center; }
+.steps { text-align: left; margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 16px; }
+.steps svg { vertical-align: -3px; color: var(--blue); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: color-mix(in srgb, var(--text) 88%, transparent); color: var(--bg); padding: 10px 18px; border-radius: 980px; font-size: 15px; z-index: 60; backdrop-filter: blur(10px); animation: view-in .4s var(--ease); max-width: calc(100% - 32px); }
+
+/* ---------- notes library ---------- */
+.n-stack { display: grid; gap: 20px; }
+.n-search { width: 100%; border: 1px solid var(--sep); background: var(--card); border-radius: 12px; padding: 11px 14px; font-size: 17px; outline: none; -webkit-appearance: none; appearance: none; }
+.n-search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 25%, transparent); }
+.n-picker { display: grid; gap: 12px; }
+.n-picker h2 { margin: 0; font: 600 24px/1.2 var(--display); }
+.n-picker p { margin: 0; color: var(--muted); }
+.n-classrow .row-main .t small { display: block; }
+.n-inline { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
+.n-inline input { flex: 1; min-width: 12em; border: 1px solid var(--sep); background: var(--bg-2); border-radius: 12px; padding: 8px 12px; font-size: 15px; }
+.n-repbar { display: grid; gap: 12px; }
+.n-repbar b { font: 600 17px var(--display); }
+.n-repbar p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.n-sub .detail-in { padding-left: 18px; gap: 14px; }
+.n-kind h3 { margin: 0 0 6px 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.n-list { background: var(--bg-2); border-radius: 14px; overflow: hidden; }
+.group > .n-list { background: none; border-radius: 0; }
+.n-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.n-item + .n-item { border-top: 1px solid var(--sep); }
+.n-item.flash { animation: n-flash 2.4s var(--ease); }
+@keyframes n-flash { 0%, 50% { background: color-mix(in srgb, var(--blue) 16%, transparent); } }
+.n-ico { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font: 700 10px/1 var(--font); letter-spacing: .03em; color: #fff; background: var(--c, var(--faint)); }
+.n-ico.pdf { --c: var(--red); } .n-ico.doc { --c: var(--blue); } .n-ico.ppt { --c: var(--orange); } .n-ico.img { --c: var(--green); } .n-ico.link { --c: var(--muted); }
+.n-t { flex: 1; min-width: 0; color: var(--text); }
+.n-t:hover { text-decoration: none; }
+.n-t:hover b { color: var(--blue); }
+.n-t b { display: block; font-weight: 500; overflow-wrap: anywhere; }
+.n-t small { display: block; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.n-acts { display: flex; gap: 2px; flex: none; }
+.n-btn { min-width: 36px; height: 36px; border: 0; background: transparent; border-radius: 10px; color: var(--blue); display: grid; place-items: center; font-size: 13px; }
+.n-btn:hover { background: var(--fill); }
+.n-btn.del { color: var(--red); }
+.n-btn.arm { padding: 0 10px; background: var(--red); color: #fff; }
+.n-btn svg { width: 20px; height: 20px; }
+.n-empty { margin: 0; color: var(--muted); font-size: 15px; }
+.sheet .n-f { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.sheet select, .sheet input[type=url], .sheet input[type=file] { width: 100%; border: 1px solid var(--sep); background: var(--bg-2); border-radius: 9px; padding: 8px 9px; font-size: 15px; color: var(--text); }
+.sheet .n-three { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .sheet .n-three { grid-template-columns: 1fr 1fr; } .sheet .n-three .n-f:first-child { grid-column: 1 / -1; } }
+.sheet .n-line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 15px; }
+.sheet p.n-err { color: var(--red); }
+.sheet small.n-help { color: var(--faint); font-size: 12px; }
+
+/* scroll-in: content rises and settles, the Apple way */
+.rise { opacity: 0; transform: translateY(28px) scale(.985); transition: opacity .9s var(--ease), transform 1.1s var(--ease); }
+.rise.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; transform: none; transition: none; }
+  .view, dialog[open], .toast { animation: none; }
+  .ring .val, .detail, .seg .thumb { transition: none; }
+}
+</style>
+</head>
+<body>
+<header class="gnav">
+  <div class="wrap">
+    <a class="logo" href="#home" aria-label="Bunk Budget home">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="6" fill="var(--blue)"/><path d="M7 7v10M10 7v10M13 7v10M16 7v10M5.5 15.5 18.5 8.5" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>
+      Bunk Budget
+    </a>
+    <nav aria-label="Main">
+      <a class="opt" href="#home" data-nav="home">Overview</a>
+      <a class="opt" href="#about" data-nav="about">About</a>
+      <a href="#notes" data-nav="notes">Notes</a>
+      <a href="#app" data-nav="app" id="nav-app">Open app</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <!-- HOME -->
+  <section class="view" data-view="home" hidden>
+    <div class="hero wrap">
+      <p class="eyebrow">Free for students</p>
+      <h1 class="hero-title"><span>Know</span> <span>your</span> <span>bunks.</span></h1>
+      <p class="sub">One screenshot. Every subject. Exactly how many lectures you can skip.</p>
+      <div class="ctas"><a class="pill" href="#app">Get started</a><a class="more" href="#about">Learn more</a></div>
+
+      <div class="phone-stage" id="phone-stage">
+        <div class="phone" aria-label="What the app looks like on a phone">
+          <div class="screen">
+            <div class="statusbar"><span>9:41</span><span class="island"></span><span class="sb-icons" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="ph-body">
+              <div class="ph-title">Attendance</div>
+              <div class="ph-sum">
+                <svg class="ring" width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle class="track" cx="42" cy="42" r="35" stroke-width="10"/><circle class="val demo-ring" cx="42" cy="42" r="35" stroke-width="10" stroke="var(--green)" stroke-dasharray="219.9" stroke-dashoffset="219.9" data-pct="93.02" transform="rotate(-90 42 42)"/><text x="42" y="42" style="font-size:17px">93%</text></svg>
+                <div><span class="k">Safe skips</span><b class="count" data-to="46">0</b><span class="k">Closest: Forensic Accounting</span></div>
+              </div>
+              <div class="ph-list">
+                <div class="r"><svg class="ring" width="34" height="34" viewBox="0 0 34 34"><circle class="track" cx="17" cy="17" r="13" stroke-width="4.5"/><circle class="val demo-ring" cx="17" cy="17" r="13" stroke-width="4.5" stroke="var(--green)" stroke-dasharray="81.7" stroke-dashoffset="81.7" data-pct="97.33" transform="rotate(-90 17 17)"/></svg><span class="t">Computer Programming<small>73 of 75</small></span><b class="ok">16</b></div>
+                <div class="r"><svg class="ring" width="34" height="34" viewBox="0 0 34 34"><circle class="track" cx="17" cy="17" r="13" stroke-width="4.5"/><circle class="val demo-ring" cx="17" cy="17" r="13" stroke-width="4.5" stroke="var(--green)" stroke-dasharray="81.7" stroke-dashoffset="81.7" data-pct="93.33" transform="rotate(-90 17 17)"/></svg><span class="t">Financial Management<small>56 of 60</small></span><b class="ok">10</b></div>
+                <div class="r"><svg class="ring" width="34" height="34" viewBox="0 0 34 34"><circle class="track" cx="17" cy="17" r="13" stroke-width="4.5"/><circle class="val demo-ring" cx="17" cy="17" r="13" stroke-width="4.5" stroke="var(--green)" stroke-dasharray="81.7" stroke-dashoffset="81.7" data-pct="91.67" transform="rotate(-90 17 17)"/></svg><span class="t">AI &amp; Machine Learning<small>55 of 60</small></span><b class="ok">8</b></div>
+                <div class="r"><svg class="ring" width="34" height="34" viewBox="0 0 34 34"><circle class="track" cx="17" cy="17" r="13" stroke-width="4.5"/><circle class="val demo-ring" cx="17" cy="17" r="13" stroke-width="4.5" stroke="var(--green)" stroke-dasharray="81.7" stroke-dashoffset="81.7" data-pct="95.56" transform="rotate(-90 17 17)"/></svg><span class="t">Direct Tax<small>43 of 45</small></span><b class="ok">8</b></div>
+                <div class="r"><svg class="ring" width="34" height="34" viewBox="0 0 34 34"><circle class="track" cx="17" cy="17" r="13" stroke-width="4.5"/><circle class="val demo-ring" cx="17" cy="17" r="13" stroke-width="4.5" stroke="var(--orange)" stroke-dasharray="81.7" stroke-dashoffset="81.7" data-pct="87.1" transform="rotate(-90 17 17)"/></svg><span class="t">Forensic Accounting<small>27 of 31</small></span><b style="color:var(--orange)">2</b></div>
+              </div>
+            </div>
+            <div class="tabbar" aria-hidden="true"><span class="on">Subjects</span><span>Scan</span><span>Rules</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="band wrap" id="how">
+      <h2 class="rise">Ten seconds. Three steps.</h2>
+      <p class="lead rise">No spreadsheet, no calculator, no guessing near exams.</p>
+      <div class="bento">
+        <div class="tile tilt rise"><span class="k">Step 1</span><h3>Snap your report.</h3><p>Screenshot the Self Attendance Report on your portal and drop it in.</p></div>
+        <div class="tile tilt rise"><span class="k">Step 2</span><h3>Check the numbers.</h3><p>It reads every subject on your device. Fix anything misread in a tap.</p></div>
+        <div class="tile tilt rise"><span class="k">Step 3</span><h3>Skip with confidence.</h3><p>Each subject shows how many lectures you can miss and stay above the line.</p></div>
+        <div class="tile wide tilt rise hero-tile"><span class="k">Below the line?</span><h3 class="huge">Attend <span class="count" data-to="6">0</span> in a row.</h3><p>Already under the cutoff in a subject? It tells you exactly how many lectures to attend back to back to get safe again.</p></div>
+        <div class="tile tilt rise"><span class="k">Private</span><h3>Stays on your phone.</h3><p>Your screenshot is read on the device and never uploaded.</p></div>
+      </div>
+    </section>
+
+    <!-- try it: the real calculation, live -->
+    <section class="band wrap">
+      <h2 class="rise">Try it.</h2>
+      <p class="lead rise">Change the numbers. The answer updates as you tap.</p>
+      <div class="tryit rise">
+        <div class="try-controls">
+          <div class="try-row"><span>Lectures attended</span><span class="stepper"><button type="button" data-try="a" data-d="-1" aria-label="Fewer attended">−</button><span id="try-a">27</span><button type="button" data-try="a" data-d="1" aria-label="More attended">+</button></span></div>
+          <div class="try-row"><span>Lectures held</span><span class="stepper"><button type="button" data-try="t" data-d="-1" aria-label="Fewer held">−</button><span id="try-t">31</span><button type="button" data-try="t" data-d="1" aria-label="More held">+</button></span></div>
+          <div class="try-row"><span>Cutoff</span><span class="miniseg"><button type="button" data-try-cut="75" aria-pressed="false">75%</button><button type="button" data-try-cut="80" aria-pressed="true">80%</button><button type="button" data-try-cut="85" aria-pressed="false">85%</button></span></div>
+        </div>
+        <div class="try-out">
+          <svg class="ring" width="150" height="150" viewBox="0 0 150 150" aria-hidden="true"><circle class="track" cx="75" cy="75" r="62" stroke-width="16"/><circle class="val" id="try-ring" cx="75" cy="75" r="62" stroke-width="16" stroke="var(--green)" stroke-dasharray="389.6" stroke-dashoffset="389.6" transform="rotate(-90 75 75)"/><text x="75" y="75" id="try-pct" style="font-size:26px">—</text></svg>
+          <p class="try-answer" id="try-answer" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band wrap">
+      <h2 class="rise">Questions.</h2>
+      <div class="faq">
+        <details class="rise"><summary>Is my screenshot uploaded?</summary><p>No. It's read by your own browser on your own device. Your numbers stay in that browser.</p></details>
+        <details class="rise"><summary>Why do I need an account?</summary><p>So your numbers belong to you, and so syncing between your phone and laptop can come next. We only use your email to sign you in.</p></details>
+        <details class="rise"><summary>Is this official?</summary><p>No. It's an independent tool made by a student. The portal is always the final word.</p></details>
+      </div>
+    </section>
+
+    <section class="final wrap">
+      <h2 class="rise">Skip smarter.</h2>
+      <a class="pill rise" href="#app">Get started</a>
+    </section>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="view" data-view="about" hidden>
+    <article class="doc wrap">
+      <h1 class="rise">About Bunk Budget</h1>
+      <p class="intro rise">A small, free tool that answers the question students ask every week: can I skip this lecture?</p>
+      <h2 class="rise">What it does</h2>
+      <p class="rise">Bunk Budget reads your attendance report and shows, for each subject, how many lectures you can miss and still stay above your college's cutoff. If you're already below, it shows how many to attend in a row to get back.</p>
+      <h2 class="rise">How it knows</h2>
+      <p class="rise">It starts from the same sum you'd do by hand: lectures attended ÷ lectures held × 100. Then it does the part that's tedious by hand, working out the skips for every subject at once and keeping track as the semester goes on.</p>
+      <h2 class="rise">Who makes it</h2>
+      <p class="rise">A student building the tools they wished they had. It's independent and not affiliated with any university.</p>
+      <h2 class="rise">Your data</h2>
+      <ul class="rise">
+        <li>Your screenshot is read by your own browser and never uploaded.</li>
+        <li>Your attendance numbers are saved only in that browser, on that device.</li>
+        <li>Your account holds only your email and password. No ads, no tracking.</li>
+      </ul>
+    </article>
+    <section class="final wrap">
+      <h2 class="rise">Ready when you are.</h2>
+      <p class="lead rise" style="margin-bottom:28px">Free, and it takes ten seconds.</p>
+      <div class="ctas rise"><a class="pill" href="#app">Get started</a><a class="more" href="#home">Back to overview</a></div>
+    </section>
+  </section>
+
+  <!-- SIGN IN -->
+  <section class="view" data-view="signin" hidden>
+    <div class="auth wrap">
+      <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M6 5v14M9.5 5v14M13 5v14M16.5 5v14M4 16.5 19 7.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <h1 id="a-title">Sign in to Bunk Budget</h1>
+      <p class="subt" id="a-sub">Use the email you signed up with.</p>
+      <div class="seg" id="seg" data-on="0" role="tablist"><span class="thumb"></span>
+        <button type="button" role="tab" data-mode="signin" aria-selected="true">Sign In</button>
+        <button type="button" role="tab" data-mode="signup" aria-selected="false">Create Account</button>
+      </div>
+      <div class="note" id="note" role="status" hidden><span class="t" id="note-t"></span><p class="b" id="note-b" hidden></p><div class="acts" id="note-acts"></div></div>
+      <form id="f-main" novalidate>
+        <div class="fieldset">
+          <label><span class="lab">Email</span><input id="email" type="text" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" required></label>
+          <label id="pw-wrap"><span class="lab">Password</span><input id="password" type="password" autocomplete="current-password" minlength="8" required><button class="eye" type="button" data-for="password" aria-label="Show password"></button></label>
+        </div>
+        <div class="hint" id="email-hint"></div>
+        <button class="pill go" id="submit" type="submit">Sign In</button>
+      </form>
+      <form id="f-reset" novalidate hidden>
+        <div class="fieldset"><label><span class="lab">New password</span><input id="newpw" type="password" autocomplete="new-password" minlength="8" required><button class="eye" type="button" data-for="newpw" aria-label="Show password"></button></label></div>
+        <button class="pill go" type="submit">Save New Password</button>
+      </form>
+      <div class="links" id="a-links"><button class="textlink" type="button" id="forgot">Forgot password?</button><button class="textlink" type="button" id="back" hidden>Back to sign in</button></div>
+      <p class="fine">Free. Your email is only used to sign you in and reset your password.</p>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <section class="view" data-view="app" hidden>
+    <div class="app wrap">
+      <div class="app-head">
+        <h1>Attendance</h1>
+        <div class="who"><span id="who"></span><a class="pill small" id="signin-link" href="#signin">Sign In</a><button class="pill gray small" id="signout" type="button" hidden>Sign Out</button></div>
+      </div>
+
+      <div class="synced" id="synced" hidden>
+        <span class="dot" aria-hidden="true"></span>
+        <span id="synced-t"></span>
+        <button class="textlink" id="resync" type="button">Upload new screenshot</button>
+      </div>
+
+      <div class="card nudge" id="welcome" hidden>
+        <div><b>Welcome to the app.</b><p>Sign in to bring the numbers you saved before, or add a screenshot to start fresh.</p></div>
+        <div class="acts"><a class="pill small" href="#signin">Sign In</a><button class="pill gray small" type="button" data-pick>Add Screenshot</button></div>
+      </div>
+      <div class="card nudge" id="nudge" hidden>
+        <div><b>Keep your numbers safe.</b><p>Save them to a free account so they're there on your laptop too, and never lost if you clear your browser.</p></div>
+        <div class="acts"><a class="pill small" href="#signin">Save to Account</a><button class="pill gray small" type="button" id="nudge-later">Not Now</button></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card summary" aria-label="Summary">
+          <svg class="ring" id="sum-ring" width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+            <circle class="track" cx="66" cy="66" r="54" stroke-width="14"/>
+            <circle class="val" id="sum-ring-v" cx="66" cy="66" r="54" stroke-width="14" stroke="var(--green)" stroke-dasharray="339.3" stroke-dashoffset="339.3" transform="rotate(-90 66 66)"/>
+            <text x="66" y="60" id="sum-ring-t">—</text><text class="s" x="66" y="84">overall</text>
+          </svg>
+          <div class="stats">
+            <div><span class="k" id="st-skip-l">Safe skips</span><span class="v num" id="st-skip">—</span></div>
+            <div><span class="k">Closest to the line</span><span class="v" id="st-tight" style="font-size:19px">—</span></div>
+            <div><span class="k">Lectures</span><span class="v num" id="st-frac" style="font-size:19px">—</span></div>
+          </div>
+        </div>
+
+        <div class="card upload" id="drop">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="12" cy="12" r="3.2"/><path d="M8 5l1.5-2h5L16 5"/></svg></div>
+          <h2>Add your screenshot</h2>
+          <p>Read on this device. Never uploaded.</p>
+          <button class="pill" type="button" id="pick">Choose Screenshot</button>
+          <input id="file" type="file" accept="image/*" hidden>
+          <div class="alts"><button class="textlink" type="button" id="t-paste">Paste table text</button><button class="textlink" type="button" id="t-add">Add a subject</button></div>
+          <div class="subform" id="f-paste" hidden><textarea id="pasted" placeholder="Copy the table from the portal and paste it here"></textarea><button class="pill gray small" id="read-paste" type="button">Read Table</button></div>
+          <form class="subform" id="f-add" hidden><input id="add-name" type="text" placeholder="Subject name" required><div class="two"><input id="add-a" type="number" min="0" placeholder="Attended" inputmode="numeric" required><input id="add-t" type="number" min="0" placeholder="Held" inputmode="numeric" required></div><button class="pill gray small" type="submit">Add Subject</button></form>
+          <div class="status" id="status" hidden></div>
+          <div class="progress" id="progress" hidden><i></i></div>
+        </div>
+      </div>
+
+      <div class="card settings" aria-label="Rules">
+        <div><span class="k">Cutoff</span><span class="stepper"><button type="button" data-step="cutoff" data-d="-1" aria-label="Lower cutoff">−</button><span id="cutoff-v">80%</span><button type="button" data-step="cutoff" data-d="1" aria-label="Raise cutoff">+</button></span></div>
+        <div><span class="k">Keep spare</span><span class="stepper"><button type="button" data-step="reserve" data-d="-1" aria-label="Fewer spare">−</button><span id="reserve-v">0</span><button type="button" data-step="reserve" data-d="1" aria-label="More spare">+</button></span></div>
+        <div><span class="k">Applies to</span><span class="miniseg"><button type="button" data-rule="subject" aria-pressed="true">Each subject</button><button type="button" data-rule="overall" aria-pressed="false">Overall</button></span></div>
+      </div>
+
+      <div>
+        <div class="listhead"><h2>Subjects</h2><span id="list-note"></span></div>
+        <div class="group" id="list"></div>
+        <div class="card homecard" id="homecard" hidden>
+          <img src="icon-192.png" width="52" height="52" alt="" class="app-icon">
+          <div class="hc-text">
+            <b>Next time, skip the portal.</b>
+            <p>Add Bunk Budget to your home screen and check in one tap.</p>
+            <ol class="steps" id="hc-steps" hidden>
+              <li>Tap <b>Share</b> <svg viewBox="0 0 20 24" width="16" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="the Share icon"><path d="M10 15V2M5.5 6.5 10 2l4.5 4.5M6 10H3.5v12h13V10H14"/></svg> at the bottom of Safari.</li>
+              <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
+              <li>Tap <b>Add</b>.</li>
+            </ol>
+          </div>
+          <button class="pill small" id="hc-go" type="button">Show me how</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTES LIBRARY: open to everyone; approved CRs and LRs upload -->
+  <section class="view" data-view="notes" hidden>
+    <div class="app wrap">
+      <div class="app-head">
+        <h1>Notes</h1>
+        <div class="who"><span id="n-label"></span><button class="pill gray small" id="n-change" type="button" hidden>Change Class</button></div>
+      </div>
+
+      <div class="card nudge" id="n-off" hidden>
+        <div><b id="n-off-t">Notes isn’t switched on yet.</b><p id="n-off-p">Check back soon.</p></div>
+        <div class="acts"><button class="pill gray small" type="button" id="n-retry">Try Again</button></div>
+      </div>
+
+      <div class="n-stack" id="n-pick" hidden>
+        <div class="card n-picker">
+          <h2>Find your class</h2>
+          <p>Syllabus, notes and past papers, shared by your CR and LR. Pick your class once and we’ll remember it on this device.</p>
+          <input id="n-cq" class="n-search" type="search" placeholder="Search, e.g. CSE SY A" autocomplete="off" aria-label="Search classes">
+        </div>
+        <div class="group" id="n-classes"></div>
+      </div>
+
+      <div class="n-stack" id="n-class" hidden>
+        <input id="n-q" class="n-search" type="search" placeholder="Search this class’s notes" autocomplete="off" aria-label="Search notes">
+        <div id="n-results" hidden>
+          <div class="listhead"><h2>Results</h2><span id="n-rcount"></span></div>
+          <div class="group" id="n-rlist"></div>
+        </div>
+        <div class="card n-repbar" id="n-rep" hidden>
+          <div><b>You’re the <span id="n-role">CR</span> of this class.</b><p>Add a subject, then open it to upload. Use Share to post a link in your WhatsApp group.</p></div>
+          <form class="n-inline" id="n-addsub"><input id="n-subname" type="text" placeholder="New subject, e.g. Data Structures" maxlength="80" required aria-label="New subject name"><button class="pill small" type="submit">Add Subject</button></form>
+        </div>
+        <div id="n-subwrap">
+          <div class="listhead"><h2>Subjects</h2><span id="n-count"></span></div>
+          <div class="group" id="n-subjects"></div>
+        </div>
+      </div>
+
+      <div class="card nudge" id="n-ask" hidden>
+        <div><b id="n-ask-t">Are you a CR or LR?</b><p id="n-ask-p">Upload your class’s notes once. Then share one link instead of re-sending files on WhatsApp.</p></div>
+        <div class="acts" id="n-ask-acts"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="n-repdlg">
+  <form class="sheet" id="n-repform" novalidate>
+    <h2>Upload for your class</h2>
+    <p>Tell us who you are. Every CR and LR is checked before they can upload.</p>
+    <div class="n-line">I’m the <span class="miniseg" id="n-roleseg"><button type="button" data-role="CR" aria-pressed="true">CR</button><button type="button" data-role="LR" aria-pressed="false">LR</button></span></div>
+    <label class="n-f">Your name, shown next to your uploads<input id="n-rname" type="text" maxlength="60" autocomplete="name" required></label>
+    <label class="n-f">Your class<select id="n-rclass"></select></label>
+    <div class="n-three" id="n-newclass" hidden>
+      <label class="n-f">Program<input id="n-rprog" type="text" maxlength="80" placeholder="B.Tech CSE" list="n-progs"></label>
+      <label class="n-f">Year<input id="n-ryear" type="text" maxlength="20" placeholder="SY" list="n-years"></label>
+      <label class="n-f">Division<input id="n-rdiv" type="text" maxlength="20" placeholder="A"></label>
+    </div>
+    <datalist id="n-progs"></datalist>
+    <datalist id="n-years"><option value="FY"><option value="SY"><option value="TY"><option value="Final Year"></datalist>
+    <p class="n-err" id="n-reperr" role="alert" hidden></p>
+    <div class="acts"><button class="pill gray" type="button" data-close>Cancel</button><button class="pill" type="submit" id="n-repsend">Send Request</button></div>
+  </form>
+</dialog>
+
+<dialog id="n-updlg">
+  <form class="sheet" id="n-upform" novalidate>
+    <h2>Add to <span id="n-upsub"></span></h2>
+    <span class="miniseg" id="n-upmode" style="justify-self:start"><button type="button" data-mode="file" aria-pressed="true">Upload a File</button><button type="button" data-mode="link" aria-pressed="false">Add a Link</button></span>
+    <label class="n-f">What is it?<select id="n-kind"></select></label>
+    <div class="n-f" id="n-upfile"><input id="n-file" type="file" aria-label="File"><small class="n-help">PDF, photos, Word or PowerPoint, up to 20 MB. Bigger? Put it on Google Drive and add the link.</small></div>
+    <label class="n-f" id="n-uplink" hidden>Link<input id="n-link" type="url" inputmode="url" placeholder="https://drive.google.com/…" autocomplete="off"></label>
+    <label class="n-f">Title<input id="n-title" type="text" maxlength="120" placeholder="Unit 3 notes" required></label>
+    <div class="progress" id="n-upprog" hidden><i></i></div>
+    <p class="n-err" id="n-uperr" role="alert" hidden></p>
+    <div class="acts"><button class="pill gray" type="button" data-close>Cancel</button><button class="pill" type="submit" id="n-upgo">Add</button></div>
+  </form>
+</dialog>
+
+<dialog id="review">
+  <form class="sheet" method="dialog">
+    <h2 id="rv-title">Check what we found</h2>
+    <p id="rv-msg"></p>
+    <div class="tablewrap"><table><thead><tr><th></th><th>Subject</th><th>Attended</th><th>Held</th></tr></thead><tbody id="rv-body"></tbody></table></div>
+    <div class="acts"><button class="pill gray" value="cancel" type="submit">Cancel</button><button class="pill" id="rv-save" value="save" type="submit">Save</button></div>
+  </form>
+</dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<footer><div class="wrap"><span>Bunk Budget · Independent, made by a student. Not affiliated with any university.</span><span><a href="#about">About</a> · <a href="#notes">Notes</a> · <a href="#app">App</a></span></div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js"></script>
+<script>
+/* ===== config ===== */
+window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', supabaseAnonKey: 'sb_publishable_MPcwls25OoeEABftgWqXxA_QQvk54ES' };
+</script>
+<script>
+/* ===== calculation engine (same tested code as the main site) ===== */
+/*
+ * Bunk Budget calculation engine.
+ * Pure, deterministic arithmetic. No AI, no DOM, no randomness.
+ * Every input is a whole number of lectures; the cutoff is a whole percent (1-100).
+ * Works in the browser (window.BunkEngine) and in Node (require) for tests.
+ */
+(function (root) {
+  'use strict';
+
+  function assertCounts(attended, held) {
+    if (!Number.isInteger(attended) || !Number.isInteger(held) || attended < 0 || held < 0) {
+      throw new RangeError('attended and held must be whole numbers, 0 or more');
+    }
+    if (attended > held) throw new RangeError('attended cannot be more than held');
+  }
+  function assertCutoff(cutoff) {
+    if (!Number.isInteger(cutoff) || cutoff < 1 || cutoff > 100) {
+      throw new RangeError('cutoff must be a whole percent from 1 to 100');
+    }
+  }
+
+  // Attendance as a percent. No lectures held yet counts as 100%.
+  function percent(attended, held) {
+    assertCounts(attended, held);
+    return held === 0 ? 100 : (attended * 100) / held;
+  }
+
+  // Lectures you can miss starting now and still be at or above the cutoff.
+  // Largest b with attended / (held + b) >= cutoff / 100. Negative means you are below.
+  function skipsNow(attended, held, cutoff) {
+    assertCounts(attended, held); assertCutoff(cutoff);
+    return Math.floor((100 * attended - cutoff * held) / cutoff);
+  }
+
+  // Lectures to attend in a row to get back to the cutoff. 0 if already there.
+  // Smallest x with (attended + x) / (held + x) >= cutoff / 100.
+  function attendToRecover(attended, held, cutoff) {
+    assertCounts(attended, held); assertCutoff(cutoff);
+    var gap = cutoff * held - 100 * attended;
+    if (gap <= 0) return 0;
+    if (cutoff === 100) return Infinity; // one miss at a 100% cutoff can never be recovered
+    return Math.ceil(gap / (100 - cutoff));
+  }
+
+  // With `remaining` lectures still to come this term: how many of them you can miss
+  // and still finish at or above the cutoff. Negative means the cutoff is out of reach.
+  function termBudget(attended, held, remaining, cutoff) {
+    assertCounts(attended, held); assertCutoff(cutoff);
+    if (!Number.isInteger(remaining) || remaining < 0) throw new RangeError('remaining must be a whole number, 0 or more');
+    return Math.floor((100 * attended - cutoff * held + (100 - cutoff) * remaining) / 100);
+  }
+
+  // Percent after skipping the next `skips` lectures.
+  function percentAfterSkipping(attended, held, skips) {
+    return percent(attended, held + skips);
+  }
+
+  // Everything the app shows for one subject.
+  function analyseSubject(subject, cutoff, reserve) {
+    reserve = reserve || 0;
+    var a = subject.attended, t = subject.held;
+    var now = skipsNow(a, t, cutoff);
+    var out = {
+      percent: percent(a, t),
+      skipsNow: Math.max(0, now),
+      spendable: Math.max(0, now - reserve),
+      below: now < 0,
+      attendToRecover: attendToRecover(a, t, cutoff),
+      termBudget: null,
+      bestFinish: null
+    };
+    if (Number.isInteger(subject.remaining) && subject.remaining >= 0) {
+      out.termBudget = termBudget(a, t, subject.remaining, cutoff);
+      out.bestFinish = percent(a + subject.remaining, t + subject.remaining);
+    }
+    out.status = out.below ? 'below' : out.spendable <= 2 ? 'tight' : 'safe';
+    return out;
+  }
+
+  // Whole weeks (with fraction) between two dates given as 'YYYY-MM-DD' or Date objects.
+  function weeksBetween(from, to) {
+    var a = new Date(from), b = new Date(to);
+    if (isNaN(a) || isNaN(b)) return null;
+    return Math.max(0, (Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) - Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / (7 * 864e5));
+  }
+
+  // How many more lectures this subject will most likely hold before the semester ends.
+  //  - credits known: credits x lectures-per-credit each week (practicals count double), for the weeks left
+  //  - otherwise: the subject's own pace so far (held / weeks elapsed), which already includes the
+  //    extra lectures that teacher tends to take
+  //  - plus any extra lectures the student already knows are announced
+  // Returns { remaining, basis } or null when there isn't enough to go on.
+  function estimateRemaining(o) {
+    var extra = Math.max(0, Math.floor(o.extra || 0));
+    var left = o.weeksLeft, done = o.weeksElapsed;
+    if (left == null || !(left >= 0)) return null;
+    if (o.credits > 0) {
+      var perWeek = o.credits * (o.perCredit || 1) * (o.type === 'PR' ? 2 : 1);
+      return { remaining: Math.round(perWeek * left) + extra, basis: 'credits', perWeek: perWeek };
+    }
+    if (done >= 1 && o.held >= 0) {
+      var pace = o.held / done;
+      return { remaining: Math.round(pace * left) + extra, basis: 'pace', perWeek: pace };
+    }
+    return null;
+  }
+
+  function totals(subjects) {
+    var a = 0, t = 0;
+    subjects.forEach(function (s) { a += s.attended; t += s.held; });
+    return { attended: a, held: t };
+  }
+
+  var BunkEngine = {
+    percent: percent,
+    skipsNow: skipsNow,
+    attendToRecover: attendToRecover,
+    termBudget: termBudget,
+    percentAfterSkipping: percentAfterSkipping,
+    analyseSubject: analyseSubject,
+    weeksBetween: weeksBetween,
+    estimateRemaining: estimateRemaining,
+    totals: totals
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = BunkEngine;
+  else root.BunkEngine = BunkEngine;
+})(this);
+
+</script>
+<script>
+/* ===== portal table reader ===== */
+/*
+ * Turns text from the attendance portal (OCR output or copied table) into
+ * { name, attended, held, type, fixed, incomplete } rows. Pure string handling, no AI.
+ * Tuned on the MITWPU "Self Attendance Report" table:
+ *   SrNo | Subject | Subject Type | Present | Total Period | Percentage
+ *
+ * OCR misreads digits ("55" -> "59)", "60" -> "80"). The portal's own percentage
+ * column lets plain arithmetic catch and repair that: attended / held must equal it.
+ * A row that still can't be read is returned with empty numbers, never dropped.
+ */
+(function (root) {
+  'use strict';
+
+  var SKIP = /^(sr\.?\s*no|subject\b|theory|practical|tutorial|total|self attendance)/i;
+  var TYPED = /^(.*?[A-Za-z].*?)\s+(TH|PR|TU|TUT|LAB|PRACT|PRA)\.?(?:\s+(.*))?$/i;
+  var TRAILING_NUMBERS = /^(.*?[A-Za-z][^0-9]*?)\s+((?:\d{1,3}(?:[.,]\d+)?\s*[\/%]?\s*){2,3})$/;
+
+  function cleanLine(raw) {
+    return raw
+      .replace(/(\s-\s*)[|l1](?=\s|$)/g, '$1I')     // OCR reads the roman numeral "I" as | or l
+      .replace(/(\d)[)\]}|!'"]+(?=\s|$)/g, '$1')     // stray marks glued to a number: "59)" -> "59"
+      .replace(/[|\[\]{}]/g, ' ')
+      .replace(/[–—]/g, '-')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function numbersIn(s) {
+    return (String(s || '').match(/\d{1,3}(?:[.,]\d+)?/g) || []).map(function (n) { return parseFloat(n.replace(',', '.')); });
+  }
+
+  function close(a, held, pct) { return held > 0 && Math.abs((a * 100) / held - pct) <= 0.06; }
+
+  // Check attended / held against the portal's percentage, repairing one misread number if needed.
+  function reconcile(a, t, pct) {
+    var out = { attended: a, held: t, fixed: null };
+    if (pct == null || !isFinite(pct)) return out;
+    if (Number.isInteger(a) && Number.isInteger(t) && t > 0 && a <= t && close(a, t, pct)) return out;
+    if (Number.isInteger(t) && t > 0) {                       // trust held, rebuild attended
+      var a2 = Math.round((pct * t) / 100);
+      if (a2 <= t && close(a2, t, pct)) { out.attended = a2; out.fixed = 'attended'; return out; }
+    }
+    if (Number.isInteger(a) && pct > 0) {                     // trust attended, rebuild held
+      var t2 = Math.round((a * 100) / pct);
+      if (t2 >= a && close(a, t2, pct)) { out.held = t2; out.fixed = 'held'; return out; }
+    }
+    out.fixed = 'unsure';
+    return out;
+  }
+
+  function parseRows(text) {
+    var rows = [];
+    String(text || '').split(/\r?\n/).forEach(function (raw) {
+      var line = cleanLine(raw);
+      if (!line) return;
+      var body = line.replace(/^\d{1,2}[.)]?\s+/, '');
+      if (SKIP.test(body)) return;
+
+      var name, type = null, nums;
+      var m = body.match(TYPED);
+      if (m) { name = m[1]; type = m[2].toUpperCase().slice(0, 2); nums = numbersIn(m[3]); }
+      else {
+        var slash = body.match(/^(.*?[A-Za-z].*?)\s+(\d{1,3})\s*\/\s*(\d{1,3})\b/);
+        if (slash) { name = slash[1]; nums = [+slash[2], +slash[3]]; }
+        else {
+          var tail = body.match(TRAILING_NUMBERS);
+          if (!tail) return;
+          name = tail[1]; nums = numbersIn(tail[2]);
+        }
+      }
+      name = name.replace(/\s*[-:]\s*$/, '').trim();
+      if (name.length < 2) return;
+
+      var ints = nums.filter(function (n) { return Number.isInteger(n); });
+      var pct = nums.length >= 3 ? nums[2] : nums.filter(function (n) { return !Number.isInteger(n); })[0];
+      var a = ints.length > 0 ? ints[0] : null, t = ints.length > 1 ? ints[1] : null;
+
+      if (a == null || t == null) {
+        if (type) rows.push({ name: name, attended: null, held: null, type: type, fixed: null, incomplete: true });
+        return;
+      }
+      if (t === 0 && a === 0) return;                          // subject with nothing held yet
+      var r = reconcile(a, t, pct);
+      if (r.held === 0 || r.attended > r.held) {
+        if (type) rows.push({ name: name, attended: a, held: t, type: type, fixed: 'unsure', incomplete: true });
+        return;
+      }
+      rows.push({ name: name, attended: r.attended, held: r.held, type: type, fixed: r.fixed, incomplete: false });
+    });
+    return rows;
+  }
+
+  var BunkParser = { parseRows: parseRows, reconcile: reconcile };
+  if (typeof module !== 'undefined' && module.exports) module.exports = BunkParser;
+  else root.BunkParser = BunkParser;
+})(this);
+
+</script>
+<script>
+/* ===== sign-in helpers ===== */
+/*
+ * Sign-in helpers on top of Supabase Auth (email + password for now).
+ * Needs, in this order: supabase-js, js/config.js, then this file.
+ */
+(function () {
+  'use strict';
+  var cfg = window.BUNK_CONFIG || {};
+  var ready = !!(cfg.supabaseUrl && cfg.supabaseAnonKey && window.supabase);
+  // Implicit flow: email links carry the session themselves, so they also work
+  // when the student opens the link in a different browser or the Gmail app.
+  var client = ready ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+    auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
+  }) : null;
+
+  function siteUrl(path) { return new URL(path, location.href).href; }
+
+  // Errors Supabase puts in the address after a failed email link, e.g. #error_code=otp_expired
+  function linkError() {
+    var h = new URLSearchParams(location.hash.replace(/^#/, ''));
+    var q = new URLSearchParams(location.search);
+    var code = h.get('error_code') || q.get('error_code');
+    var desc = h.get('error_description') || q.get('error_description');
+    if (!code && !desc && !h.get('error') && !q.get('error')) return null;
+    return { code: code || h.get('error') || q.get('error'), description: desc || '' };
+  }
+
+  // Step-by-step trace, shown on the sign-in page when the address ends in ?debug=1.
+  var DEBUG = /[?&]debug=1/.test(location.search);
+  function trace(msg) {
+    if (!DEBUG) return;
+    try { var log = JSON.parse(sessionStorage.getItem('bunk-trace') || '[]'); log.push(new Date().toLocaleTimeString() + ' ' + location.pathname.split('/').pop() + ': ' + msg); sessionStorage.setItem('bunk-trace', JSON.stringify(log.slice(-40))); } catch (e) {}
+  }
+
+  // Reject a sign-in call that hangs, instead of leaving the button spinning forever.
+  function withTimeout(p, ms) {
+    return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms || 15000); })]);
+  }
+
+  var BunkAuth = {
+    configured: ready,
+    client: client,
+    linkError: linkError,
+    trace: trace,
+    debug: DEBUG,
+    withTimeout: withTimeout,
+
+    session: function () {
+      if (!client) return Promise.resolve(null);
+      return withTimeout(client.auth.getSession(), 10000).then(function (r) {
+        trace('session ' + (r.data.session ? 'found for ' + r.data.session.user.email : 'not found'));
+        return r.data.session;
+      });
+    },
+
+    // Send anyone without a session to the sign-in page, then back here afterwards.
+    // `bounced` tells the sign-in page not to send the student straight back, so the two pages can never loop.
+    requireSession: function () {
+      var err = linkError();
+      return BunkAuth.session().catch(function () { return null; }).then(function (s) {
+        if (s) {
+          if (location.hash) history.replaceState(null, '', location.pathname + location.search); // tidy the address bar
+          return s;
+        }
+        var back = location.pathname.split('/').pop() || 'app.html';
+        var url = 'login.html?next=' + encodeURIComponent(back) + '&bounced=1' + (DEBUG ? '&debug=1' : '');
+        if (err) url += '&link_error=' + encodeURIComponent(err.code || 'unknown');
+        trace('no session, sending to sign-in');
+        location.replace(url);
+        return new Promise(function () {}); // stop here while the page changes
+      });
+    },
+
+    signUp: function (email, password) {
+      return client.auth.signUp({ email: email, password: password, options: { emailRedirectTo: location.href.split('#')[0] } });
+    },
+    signIn: function (email, password) {
+      return client.auth.signInWithPassword({ email: email, password: password });
+    },
+    resendConfirmation: function (email) {
+      return client.auth.resend({ type: 'signup', email: email, options: { emailRedirectTo: location.href.split('#')[0] } });
+    },
+    sendReset: function (email) {
+      return client.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+    },
+    setPassword: function (password) {
+      return client.auth.updateUser({ password: password });
+    },
+    signOut: function () {
+      return client ? client.auth.signOut() : Promise.resolve();
+    },
+
+    // "itsmoonlightsonata" -> "itsmoonlightsonata@gmail.com". Full addresses are left alone.
+    normaliseEmail: function (raw) {
+      var v = String(raw || '').trim().toLowerCase();
+      if (v && v.indexOf('@') === -1 && /^[a-z0-9._+-]+$/.test(v)) v += '@gmail.com';
+      return v;
+    },
+    validEmail: function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); },
+
+    // A web link to the student's inbox, opened on the confirmation email where possible.
+    // On phones, mail.google.com opens the Gmail app when it is installed.
+    inboxFor: function (email) {
+      var domain = (email.split('@')[1] || '').toLowerCase();
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        return { label: 'Open Gmail', href: 'https://mail.google.com/mail/u/0/#search/' + encodeURIComponent('from:supabase newer_than:1d') };
+      }
+      if (/^(outlook|hotmail|live|msn)\./.test(domain)) return { label: 'Open Outlook', href: 'https://outlook.live.com/mail/0/' };
+      if (/^yahoo\./.test(domain)) return { label: 'Open Yahoo Mail', href: 'https://mail.yahoo.com/' };
+      return null;
+    },
+
+    // Plain-English versions of Supabase's error codes and messages.
+    explain: function (err) {
+      var m = ((err && (err.code || '')) + ' ' + (err && err.message || '')).toLowerCase();
+      if (m.indexOf('otp_expired') > -1 || m.indexOf('expired') > -1) return 'That email link has expired or was already used. We can send you a new one.';
+      if (m.indexOf('access_denied') > -1) return 'That email link didn’t work. We can send you a new one.';
+      if (m.indexOf('email not confirmed') > -1 || m.indexOf('email_not_confirmed') > -1) return 'Your email isn’t confirmed yet. Open the link we emailed you, or send a new one.';
+      if (m.indexOf('password should be') > -1 || m.indexOf('weak') > -1) return 'Use a password of at least 8 characters.';
+      if (m.indexOf('rate limit') > -1 || m.indexOf('over_email_send_rate_limit') > -1) return 'Too many emails sent just now. Wait a few minutes and try again.';
+      if (m.indexOf('timeout') > -1) return 'The sign-in service is taking too long. Close any other Bunk Budget tabs, then try again.';
+      if (m.indexOf('fetch') > -1 || m.indexOf('network') > -1) return 'Can’t reach the sign-in service. Check your internet and try again.';
+      return 'Something went wrong: ' + (err && err.message || 'unknown error');
+    }
+  };
+  window.BunkAuth = BunkAuth;
+})();
+
+</script>
+<script>
+/* ===== notes library logic (tested in tests/notes.test.js) ===== */
+/*
+ * Notes Library: the plain logic behind the Notes tab (no page or network code).
+ * Checks files and links before upload, builds storage paths and share links,
+ * and sorts and searches what a class has. Covered by tests/notes.test.js.
+ */
+(function (root) {
+  'use strict';
+
+  var KINDS = [
+    { id: 'syllabus', label: 'Syllabus' },
+    { id: 'notes', label: 'Notes' },
+    { id: 'pyq', label: 'Past Papers' },
+    { id: 'assignment', label: 'Assignments' },
+    { id: 'other', label: 'Other' }
+  ];
+  var MAX_BYTES = 20 * 1024 * 1024;
+  // Must match allowed_mime_types on the "notes" bucket in supabase/notes.sql.
+  var TYPES = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  };
+  var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  function ext(name) {
+    var m = /\.([a-z0-9]+)$/i.exec(String(name || ''));
+    return m ? m[1].toLowerCase() : '';
+  }
+
+  function kindLabel(id) {
+    for (var i = 0; i < KINDS.length; i++) if (KINDS[i].id === id) return KINDS[i].label;
+    return 'Other';
+  }
+
+  // { ok, mime } or { ok: false, error } for a picked file ({ name, size, type }).
+  function checkFile(f) {
+    if (!f || !f.name) return { ok: false, error: 'Choose a file first.' };
+    var mime = TYPES[ext(f.name)];
+    if (!mime) return { ok: false, error: 'Use a PDF, photo (JPG, PNG), Word or PowerPoint file.' };
+    if (!(f.size > 0)) return { ok: false, error: 'That file is empty.' };
+    if (f.size > MAX_BYTES) return { ok: false, error: 'That file is ' + humanSize(f.size) + '. The limit is 20 MB. Put big files on Google Drive and add the link instead.' };
+    return { ok: true, mime: mime };
+  }
+
+  // "Unit 3 – Notes (final).PDF" -> "unit-3-notes-final.pdf". Storage keys stay plain ASCII.
+  function safeName(name) {
+    var e = ext(name), base = String(name || '');
+    if (e) base = base.slice(0, -(e.length + 1));
+    base = base.normalize ? base.normalize('NFKD') : base;
+    base = base.replace(/[^\x00-\x7f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '');
+    return (base || 'file') + (e ? '.' + e : '');
+  }
+
+  // "<class id>/<subject id>/<random>-<name>": the database checks the first part to allow uploads.
+  function storagePath(classId, subjectId, fileName, rand) {
+    if (!UUID.test(classId) || !UUID.test(subjectId)) throw new Error('bad ids');
+    var r = String(rand || '').replace(/[^a-z0-9]/gi, '').slice(0, 12) || 'x';
+    return classId.toLowerCase() + '/' + subjectId.toLowerCase() + '/' + r + '-' + safeName(fileName);
+  }
+
+  // A web link a rep pastes (Drive, OneDrive…). Adds https:// when missing; refuses anything else.
+  function normaliseLink(raw) {
+    var v = String(raw || '').trim();
+    if (!v) return null;
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v;
+    var u;
+    try { u = new URL(v); } catch (e) { return null; }
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    if (!/\./.test(u.hostname)) return null;
+    return u.href;
+  }
+
+  // "Title from file name": "unit_3-notes.pdf" -> "unit 3 notes"
+  function titleFromFile(name) {
+    return String(name || '').replace(/\.[^.]*$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+  }
+
+  function classLabel(c) {
+    if (!c) return '';
+    var parts = [String(c.program || '').trim(), String(c.year || '').trim()];
+    var d = String(c.division || '').trim();
+    if (d) parts.push(/^div/i.test(d) ? d : 'Div ' + d);
+    return parts.filter(Boolean).join(' · ');
+  }
+
+  function sortClasses(list) {
+    return (list || []).slice().sort(function (a, b) { return classLabel(a).localeCompare(classLabel(b), undefined, { numeric: true, sensitivity: 'base' }); });
+  }
+
+  // Classes whose label has every word typed, in any order.
+  function filterClasses(list, q) {
+    var words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    return sortClasses(list).filter(function (c) {
+      var l = classLabel(c).toLowerCase();
+      return words.every(function (w) { return l.indexOf(w) > -1; });
+    });
+  }
+
+  // #notes/<class>/<subject>/<material>: each part optional, anything not an id is ignored.
+  function parseRoute(hash) {
+    var parts = String(hash || '').replace(/^#/, '').split(/[?&]/)[0].split('/');
+    if (parts[0] !== 'notes') return null;
+    var out = { classId: null, subjectId: null, materialId: null };
+    var keys = ['classId', 'subjectId', 'materialId'];
+    for (var i = 0; i < keys.length; i++) {
+      var p = parts[i + 1];
+      if (!p || !UUID.test(p)) break;
+      out[keys[i]] = p.toLowerCase();
+    }
+    return out;
+  }
+
+  function shareLink(base, classId, subjectId, materialId) {
+    var h = '#notes';
+    [classId, subjectId, materialId].some(function (id) { if (!id) return true; h += '/' + id; return false; });
+    return String(base).split('#')[0] + h;
+  }
+
+  function humanSize(b) {
+    b = +b || 0;
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return Math.round(b / 1024) + ' KB';
+    return (Math.round(b / 1024 / 1024 * 10) / 10) + ' MB';
+  }
+
+  // Material in kind order (Syllabus first), newest first inside each kind. Empty kinds left out.
+  function groupByKind(materials) {
+    var by = {};
+    (materials || []).forEach(function (m) { var k = kindLabel(m.kind) === 'Other' ? 'other' : m.kind; (by[k] = by[k] || []).push(m); });
+    return KINDS.filter(function (k) { return by[k.id]; }).map(function (k) {
+      return { kind: k.id, label: k.label, items: by[k.id].slice().sort(function (a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); }) };
+    });
+  }
+
+  // Material matching every typed word in its title, file name, kind or subject name.
+  function search(materials, subjects, q) {
+    var words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    var names = {};
+    (subjects || []).forEach(function (s) { names[s.id] = s.name; });
+    return (materials || []).filter(function (m) {
+      var hay = [m.title, m.file_name, kindLabel(m.kind), names[m.subject_id]].join(' ').toLowerCase();
+      return words.every(function (w) { return hay.indexOf(w) > -1; });
+    });
+  }
+
+  // "Today", "Yesterday", "3 days ago", or "12 Mar".
+  function ago(iso, now) {
+    var d = new Date(iso); if (isNaN(d)) return '';
+    now = now || new Date();
+    var day = function (x) { return Date.UTC(x.getFullYear(), x.getMonth(), x.getDate()); };
+    var n = Math.round((day(now) - day(d)) / 86400000);
+    if (n <= 0) return 'Today';
+    if (n === 1) return 'Yesterday';
+    if (n < 7) return n + ' days ago';
+    return d.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ' ' + d.getFullYear() : '');
+  }
+
+  var BunkNotes = {
+    KINDS: KINDS, MAX_BYTES: MAX_BYTES, TYPES: TYPES, ACCEPT: Object.keys(TYPES).map(function (e) { return '.' + e; }).join(','),
+    ext: ext, kindLabel: kindLabel, checkFile: checkFile, safeName: safeName, storagePath: storagePath,
+    normaliseLink: normaliseLink, titleFromFile: titleFromFile, classLabel: classLabel, sortClasses: sortClasses,
+    filterClasses: filterClasses, parseRoute: parseRoute, shareLink: shareLink, humanSize: humanSize,
+    groupByKind: groupByKind, search: search, ago: ago, isId: function (s) { return UUID.test(String(s || '')); }
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = BunkNotes;
+  else root.BunkNotes = BunkNotes;
+})(this);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = BunkEngine, P = BunkParser, A = BunkAuth;
+  function $(s) { return document.querySelector(s); }
+  function $$(s) { return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(x) { return (Math.round(x * 100) / 100).toFixed(2); }
+  function int(v, lo, hi, d) { var n = parseInt(v, 10); return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; }
+  var toastT;
+  function toast(m) { var t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2600); }
+  var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- routing between the four views (one file, hash links) ---------- */
+  var session = null;
+  function route() {
+    var v = (location.hash.replace('#', '').split(/[?&\/]/)[0]) || 'home';
+    if (v === 'how') v = 'home';
+    if (['home', 'about', 'signin', 'app', 'notes'].indexOf(v) < 0) v = 'home';
+    if (v === 'signin' && session && !recovering) { location.replace('#app'); return; }
+    $$('[data-view]').forEach(function (s) { s.hidden = s.dataset.view !== v; });
+    $$('[data-nav]').forEach(function (a) { a.classList.toggle('on', a.dataset.nav === v); });
+    $('#nav-app').textContent = session ? 'Your attendance' : 'Open app';
+    if (location.hash === '#how') { var h = document.getElementById('how'); if (h) h.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' }); }
+    else scrollTo(0, 0);
+    if (v === 'app') startApp();
+    if (v === 'notes') startNotes();
+    reveal();
+  }
+  addEventListener('hashchange', route);
+
+  /* ---------- scroll-in ---------- */
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 }) : null;
+  function reveal() { $$('.rise:not(.in)').forEach(function (el) { if (io && !REDUCED) io.observe(el); else el.classList.add('in'); }); }
+
+  /* ---------- sign in ---------- */
+  var mode = 'signin', recovering = false;
+  var EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17.4 17.4 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  $$('.eye').forEach(function (b) {
+    b.innerHTML = EYE;
+    b.addEventListener('click', function () {
+      var i = document.getElementById(b.dataset.for), show = i.type === 'password';
+      i.type = show ? 'text' : 'password'; b.innerHTML = show ? EYE_OFF : EYE;
+      b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+  });
+  var COPY = {
+    signin: { title: 'Sign in to Bunk Budget', sub: 'Use the email you signed up with.', button: 'Sign In', auto: 'current-password' },
+    signup: { title: 'Create your account', sub: 'Free. Takes ten seconds.', button: 'Create Account', auto: 'new-password' },
+    forgot: { title: 'Reset your password', sub: 'We’ll email you a link to choose a new one.', button: 'Send Reset Link' }
+  };
+  function note(title, kind, actions, body) {
+    var n = $('#note'); n.hidden = !title; n.className = 'note' + (kind ? ' ' + kind : '');
+    $('#note-t').textContent = title || '';
+    $('#note-b').textContent = body || ''; $('#note-b').hidden = !body;
+    var box = $('#note-acts'); box.innerHTML = '';
+    (actions || []).forEach(function (a) {
+      var el = document.createElement(a.href ? 'a' : 'button');
+      el.className = 'pill small' + (a.primary ? '' : ' gray'); el.textContent = a.label;
+      if (a.href) { el.href = a.href; el.target = '_blank'; el.rel = 'noopener'; } else { el.type = 'button'; el.addEventListener('click', a.onClick); }
+      box.appendChild(el);
+    });
+    box.hidden = !box.children.length;
+  }
+  function busy(on) { var b = $('#submit'); b.disabled = on; b.textContent = on ? 'One moment…' : COPY[mode].button; }
+  function setMode(m, keep) {
+    mode = m; var c = COPY[m];
+    $('#a-title').textContent = c.title; $('#a-sub').textContent = c.sub;
+    $('#submit').textContent = c.button; $('#submit').disabled = false;
+    $('#pw-wrap').hidden = m === 'forgot';
+    if (c.auto) $('#password').setAttribute('autocomplete', c.auto);
+    $('#seg').hidden = m === 'forgot'; $('#seg').dataset.on = m === 'signup' ? '1' : '0';
+    $$('#seg [data-mode]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.mode === m)); });
+    $('#forgot').hidden = m === 'forgot'; $('#back').hidden = m !== 'forgot';
+    $('#f-main').hidden = false; $('#f-reset').hidden = true;
+    if (!keep) note('');
+  }
+  $$('#seg [data-mode]').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
+  $('#forgot').addEventListener('click', function () { setMode('forgot'); });
+  $('#back').addEventListener('click', function () { setMode('signin'); });
+  $('#email').addEventListener('input', function () {
+    var raw = this.value.trim(), full = A.normaliseEmail(raw);
+    $('#email-hint').textContent = raw && raw.indexOf('@') < 0 && full !== raw.toLowerCase() ? 'We’ll use ' + full : '';
+  });
+  function enter() {
+    A.session().then(function (s) {
+      if (s) {
+        session = s; afterSignIn(); appStarted = false;
+        var next = '#app';  // a CR who tapped "Upload for My Class" goes back to Notes
+        try { next = sessionStorage.getItem('bb-next') || next; sessionStorage.removeItem('bb-next'); } catch (e) {}
+        adoptIntoAccount().then(function () { location.hash = next; route(); });
+        return;
+      }
+      busy(false); note('You’re signed in, but this browser didn’t keep it.', 'error', null, 'If you’re in a private window or block site data, allow it for this site and try again.');
+    });
+  }
+  $('#f-main').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = A.normaliseEmail($('#email').value), pw = $('#password').value;
+    if (!A.validEmail(email)) { note('Enter your email.', 'error', null, 'Like yourname@gmail.com, or just yourname for Gmail.'); return; }
+    if (mode !== 'forgot' && pw.length < 8) { note('Use a password of at least 8 characters.', 'error'); return; }
+    $('#email').value = email; busy(true); note('');
+    if (mode === 'signin') {
+      A.withTimeout(A.signIn(email, pw)).then(function (r) {
+        if (!r.error) { enter(); return; }
+        busy(false);
+        var m = (r.error.code || r.error.message || '').toLowerCase();
+        if (m.indexOf('invalid') > -1) note('No account matches that email and password.', 'error', [
+          { label: 'Create My Account', primary: true, onClick: function () { setMode('signup'); $('#f-main').requestSubmit(); } },
+          { label: 'Reset Password', onClick: function () { setMode('forgot'); } }
+        ], 'New here? Create your account with these same details in one tap. Already signed up? Reset your password.');
+        else note(A.explain(r.error), 'error');
+      }, function (err) { busy(false); note(A.explain(err), 'error'); });
+      return;
+    }
+    if (mode === 'signup') {
+      A.withTimeout(A.signUp(email, pw)).then(function (r) {
+        if (!r.error && r.data.session) { enter(); return; }
+        busy(false);
+        var u = r.data && r.data.user;
+        if ((r.error && /already|registered|exists/i.test(r.error.message)) || (u && Array.isArray(u.identities) && u.identities.length === 0)) {
+          setMode('signin', true);
+          note('You already have an account with ' + email + '.', 'ok', [{ label: 'Sign In Now', primary: true, onClick: function () { $('#f-main').requestSubmit(); } }]);
+          return;
+        }
+        if (r.error) { note(A.explain(r.error), 'error'); return; }
+        var inbox = A.inboxFor(email);
+        note('Check your inbox to finish signing up.', 'ok', inbox ? [{ label: inbox.label, href: inbox.href, primary: true }] : null, 'We sent a link to ' + email + '.');
+        $('#submit').disabled = true;
+      }, function (err) { busy(false); note(A.explain(err), 'error'); });
+      return;
+    }
+    A.sendReset(email).then(function (r) {
+      busy(false);
+      if (r.error) { note(A.explain(r.error), 'error'); return; }
+      $('#submit').disabled = true;
+      var inbox = A.inboxFor(email);
+      note('Reset link sent.', 'ok', inbox ? [{ label: inbox.label, href: inbox.href, primary: true }] : null, 'If there’s an account for ' + email + ', the link is in your inbox.');
+    });
+  });
+  function showReset() {
+    recovering = true;
+    if (location.hash !== '#signin') location.replace('#signin');
+    route();
+    $('#f-main').hidden = true; $('#seg').hidden = true; $('#a-links').hidden = true; $('#f-reset').hidden = false;
+    $('#a-title').textContent = 'Choose a new password';
+    $('#a-sub').textContent = 'At least 8 characters. You’ll stay signed in.';
+    note('');
+    setTimeout(function () { $('#newpw').focus(); }, 50);
+  }
+  $('#f-reset').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var pw = $('#newpw').value;
+    if (pw.length < 8) { note('Use a password of at least 8 characters.', 'error'); return; }
+    A.setPassword(pw).then(function (r) {
+      if (r.error) { note(A.explain(r.error), 'error'); return; }
+      recovering = false; $('#a-links').hidden = false; location.hash = '#app';
+      toast('Password updated. You’re signed in.');
+    });
+  });
+  $('#signout').addEventListener('click', function () {
+    A.signOut().then(function () { session = null; afterSignIn(); appStarted = false; location.hash = '#home'; });
+  });
+  function afterSignIn() {
+    $('#who').textContent = session ? session.user.email : '';
+    $('#signin-link').hidden = !!session; $('#signout').hidden = !session;
+  }
+
+  /* ---------- the tracker ---------- */
+  // Anyone can use it. Numbers live on this device under "guest" until the student signs in;
+  // then they move to their account (this device's copy plus the cloud copy in Supabase).
+  var state, KEY, open = {}, whatIf = {}, pending = null, appStarted = false, firstPaint = true;
+  var GUEST = 'bunk-budget:guest';
+  function keyFor(s) { return s ? 'bunk-budget:' + s.user.id : GUEST; }
+  function blank() { return { cutoff: 80, reserve: 0, rule: 'subject', subjects: [], syncedAt: null, edits: 0 }; }
+  function mk(name, a, t) { return { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, attended: a, held: t, remaining: null }; }
+  function read(k) {
+    try { var s = JSON.parse(localStorage.getItem(k)); if (s && Array.isArray(s.subjects)) return s; } catch (e) {}
+    return null;
+  }
+  function load() { return read(KEY) || blank(); }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    if (session) cloudPushSoon();
+  }
+  function startApp() {
+    if (appStarted) return;
+    appStarted = true; firstPaint = true;
+    KEY = keyFor(session);
+    countVisit();
+    state = load(); render();
+    if (session) cloudPull().then(function (remote) {
+      if (remote && isNewer(remote, state)) { state = remote; firstPaint = true; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} render(); }
+      else if (state.subjects.length && (!remote || isNewer(state, remote))) cloudPushSoon();
+    });
+  }
+
+  /* ---------- account copy (Supabase table "attendance", one row per student) ---------- */
+  // Newer = the one made from the more recent portal screenshot; an empty copy never wins.
+  function isNewer(a, b) {
+    if (!a || !a.subjects.length) return false;
+    if (!b || !b.subjects.length) return true;
+    return (a.syncedAt || '') > (b.syncedAt || '');
+  }
+  var cloudWarned = false;
+  function cloudFail(err) {
+    if (cloudWarned) return; cloudWarned = true;
+    toast('Couldn’t reach your account. Your numbers are still saved on this device.');
+    if (window.console) console.warn('Bunk Budget cloud save:', err && err.message);
+  }
+  function cloudPull() {
+    if (!session || !A.client) return Promise.resolve(null);
+    return A.client.from('attendance').select('data').eq('user_id', session.user.id).maybeSingle()
+      .then(function (r) { if (r.error) { cloudFail(r.error); return null; } return r.data && r.data.data && Array.isArray(r.data.data.subjects) ? r.data.data : null; },
+            function (err) { cloudFail(err); return null; });
+  }
+  var pushTimer;
+  function cloudPushSoon() {
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function () {
+      if (!session || !A.client) return;
+      A.client.from('attendance').upsert({ user_id: session.user.id, data: state, updated_at: new Date().toISOString() })
+        .then(function (r) { if (r.error) cloudFail(r.error); }, cloudFail);
+    }, 800);
+  }
+  // Right after signing in: keep whichever copy is newest (this device as a guest, this device
+  // for this account, or the account's cloud copy), save it to the account, and empty the guest copy.
+  function adoptIntoAccount() {
+    var guest = read(GUEST), mine = read(keyFor(session));
+    return cloudPull().then(function (remote) {
+      var best = [guest, mine, remote].reduce(function (a, b) { return isNewer(b, a) ? b : a; }, null) || blank();
+      KEY = keyFor(session); state = best;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); localStorage.removeItem(GUEST); } catch (e) {}
+      if (best.subjects.length && best !== remote) { cloudPushSoon(); toast('Your numbers are now saved to your account.'); }
+      appStarted = true; firstPaint = true; render();
+    });
+  }
+
+  /* ---------- gentle asks: one at a time, never a wall ---------- */
+  var STANDALONE = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function countVisit() {
+    try { if (sessionStorage.getItem('bb-counted')) return; sessionStorage.setItem('bb-counted', '1'); } catch (e) { return; }
+    store('bb-visits', String((+store('bb-visits') || 0) + 1));
+  }
+  function paintAsks() {
+    var has = state.subjects.length > 0;
+    // installed app opened for the first time: on iPhone it starts with its own empty storage
+    $('#welcome').hidden = !(STANDALONE && !session && !has);
+    var snoozed = (+store('bb-nudge-until') || 0) > Date.now();
+    $('#nudge').hidden = !(!session && has && (+store('bb-visits') || 0) >= 2 && !snoozed && $('#welcome').hidden);
+  }
+  $('#welcome [data-pick]').addEventListener('click', function () { $('#file').click(); });
+  $('#nudge-later').addEventListener('click', function () { store('bb-nudge-until', String(Date.now() + 7 * 864e5)); paintAsks(); });
+
+  /* ---------- installable app: a card under the results, never a popup ---------- */
+  // Shown on the visit with the first good result and on one later visit, then never again.
+  // Android/Chrome: the button opens the browser's own install prompt. iPhone: it shows the Share steps.
+  var installEvt = null;
+  var IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; paintHomeCard(); });
+  addEventListener('appinstalled', function () { installEvt = null; store('bb-installed', '1'); paintHomeCard(); toast('Added to your home screen.'); });
+  function canInstall() { return !STANDALONE && !store('bb-installed') && (installEvt || IOS); }
+  function paintHomeCard() {
+    var card = $('#homecard');
+    if (!card || !state) return;
+    var shownNow = false;
+    try { shownNow = sessionStorage.getItem('bb-hc-now') === '1'; } catch (e) {}
+    var seen = +store('bb-hc-seen') || 0;
+    var show = canInstall() && state.subjects.length > 0 && (shownNow || seen < 2);
+    if (show && !shownNow) {
+      try { sessionStorage.setItem('bb-hc-now', '1'); } catch (e) {}
+      store('bb-hc-seen', String(seen + 1));
+    }
+    card.hidden = !show;
+    $('#hc-go').textContent = installEvt ? 'Add to Home Screen' : 'Show me how';
+  }
+  $('#hc-go').addEventListener('click', function () {
+    if (installEvt) {
+      installEvt.prompt();
+      installEvt.userChoice.then(function () { installEvt = null; paintHomeCard(); });
+      return;
+    }
+    var steps = $('#hc-steps'); steps.hidden = !steps.hidden;
+    this.textContent = steps.hidden ? 'Show me how' : 'Hide steps';
+  });
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+
+  /* ---------- how old the numbers are ---------- */
+  // Plain calendar days since the last portal screenshot or pasted table. Taps on +1 don't reset it.
+  function daysSince(iso) {
+    var a = new Date(iso), b = new Date();
+    return Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) - Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / 864e5);
+  }
+  function paintSynced() {
+    var box = $('#synced');
+    if (!state.syncedAt || !state.subjects.length) { box.hidden = true; return; }
+    var d = daysSince(state.syncedAt), when = d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago';
+    var edits = state.edits ? ', plus ' + state.edits + ' change' + (state.edits > 1 ? 's' : '') + ' you made' : '';
+    box.hidden = false;
+    box.className = 'synced ' + (d < 3 ? 'fresh' : d <= 7 ? 'aging' : 'stale');
+    $('#synced-t').textContent = 'Last synced ' + when + edits + (d > 7 ? '. Your numbers may be off.' : d >= 3 ? '. Worth a fresh screenshot.' : '.');
+  }
+  $('#resync').addEventListener('click', function () { $('#file').click(); });
+
+  function ringSvg(pct, color, size, stroke) {
+    var r = (size - stroke) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.min(100, Math.max(0, pct)) / 100);
+    var start = firstPaint && !REDUCED ? c : off;
+    return '<svg class="ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true">' +
+      '<circle class="track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '"/>' +
+      '<circle class="val" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + stroke + '" stroke="' + color + '" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + start.toFixed(1) + '" data-to="' + off.toFixed(1) + '" transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')"/></svg>';
+  }
+  var COLOR = { safe: 'var(--green)', tight: 'var(--orange)', below: 'var(--red)' };
+
+  // Lectures still to come for a subject: the student's own number if they typed one,
+  // otherwise the engine's estimate from the semester dates (pace so far, or credits).
+  function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function remainingFor(s) {
+    return s.remaining != null ? { n: s.remaining, basis: 'typed' } : null;
+  }
+  function remainingFromSemester(s) { // kept for when semester dates come back
+    var sem = state.semester || {};
+    if (!sem.start || !sem.end) return null;
+    var est = E.estimateRemaining({
+      held: s.held, credits: s.credits, type: s.type, extra: s.extra,
+      weeksElapsed: E.weeksBetween(sem.start, today()), weeksLeft: E.weeksBetween(today(), sem.end)
+    });
+    return est ? { n: est.remaining, basis: est.basis } : null;
+  }
+
+  function render() {
+    var p = state.cutoff, subs = state.subjects, T = E.totals(subs);
+    $('#cutoff-v').textContent = p + '%'; $('#reserve-v').textContent = state.reserve;
+    $$('[data-rule]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.rule === state.rule)); });
+    var res = subs.map(function (s) {
+      var rem = remainingFor(s);
+      var r = E.analyseSubject({ attended: s.attended, held: s.held, remaining: rem ? rem.n : null }, p, state.reserve);
+      r.rem = rem;
+      return { s: s, r: r };
+    });
+
+    var overall = T.held ? E.percent(T.attended, T.held) : 0;
+    var o = E.analyseSubject(T, p, state.reserve);
+    $('#sum-ring-t').textContent = T.held ? fmt(overall).replace(/\.00$/, '') + '%' : '—';
+    var ringV = $('#sum-ring-v'), C = 339.3;
+    ringV.setAttribute('stroke', COLOR[T.held ? o.status : 'safe']);
+    ringV.style.strokeDashoffset = (C * (1 - (T.held ? overall : 0) / 100)).toFixed(1);
+    $('#st-frac').textContent = T.held ? T.attended + ' of ' + T.held : 'None yet';
+    if (state.rule === 'overall') {
+      $('#st-skip-l').textContent = 'Safe skips overall';
+      $('#st-skip').textContent = !T.held ? '—' : o.below ? 'Attend ' + o.attendToRecover : o.spendable;
+    } else {
+      $('#st-skip-l').textContent = 'Safe skips';
+      $('#st-skip').textContent = subs.length ? res.reduce(function (n, x) { return n + x.r.spendable; }, 0) : '—';
+    }
+    var rank = function (x) { return x.r.below ? -1000 - x.r.attendToRecover : x.r.spendable; };
+    var tight = res.slice().sort(function (a, b) { return rank(a) - rank(b); })[0];
+    $('#st-tight').textContent = tight ? tight.s.name : '—';
+    var below = res.filter(function (x) { return x.r.below; }).length;
+    $('#list-note').textContent = subs.length ? (below ? below + ' below ' + p + '%' : 'All above ' + p + '%') : '';
+
+    var list = $('#list');
+    if (!subs.length) {
+      list.innerHTML = '<div class="empty"><b>No subjects yet</b><p>Add a screenshot of your Self Attendance Report and your subjects appear here in a few seconds.</p><button class="pill" type="button" data-pick>Choose Screenshot</button></div>';
+    } else list.innerHTML = res.map(function (x) { return row(x.s, x.r); }).join('');
+
+    if (firstPaint && !REDUCED) requestAnimationFrame(function () { requestAnimationFrame(function () {
+      $$('#list .ring .val').forEach(function (c) { c.style.strokeDashoffset = c.dataset.to; });
+    }); });
+    firstPaint = false;
+    paintSynced(); paintAsks(); paintHomeCard();
+  }
+
+  function row(s, r) {
+    var p = state.cutoff, isOpen = !!open[s.id];
+    var n = r.below ? '<b>' + r.attendToRecover + '</b><small>attend in a row</small>' : '<b>' + r.spendable + '</b><small>can skip</small>';
+    var k = whatIf[s.id] || 0, after = E.percentAfterSkipping(s.attended, s.held, k);
+    var rem = r.rem, BASIS = { typed: 'your number', pace: 'this subject’s pace so far', credits: 'its credits' };
+    var basisNote = '';
+    var term = r.termBudget == null ? '<p class="muted">Add how many lectures are left this semester to see your budget for the rest of term.</p>'
+      : r.termBudget < 0 ? '<p class="muted bad">Even attending all of the remaining lectures, you finish at ' + fmt(r.bestFinish) + '%.</p>' + basisNote
+      : '<p class="muted">Over the rest of term you can miss <b class="ok">' + r.termBudget + '</b> and still finish at ' + p + '% or more.</p>' + basisNote;
+    return '<div class="row ' + r.status + (isOpen ? ' open' : '') + '" data-id="' + s.id + '">' +
+      '<button class="row-main" type="button" data-act="open" aria-expanded="' + isOpen + '">' +
+        ringSvg(r.percent, COLOR[r.status], 46, 6) +
+        '<span class="t"><b>' + esc(s.name) + '</b><small class="num">' + s.attended + ' of ' + s.held + ' · ' + fmt(r.percent) + '%</small></span>' +
+        '<span class="n">' + n + '</span>' +
+        '<svg class="chev" width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l6 6-6 6"/></svg>' +
+      '</button>' +
+      '<div class="detail"><div><div class="detail-in">' +
+        '<div class="acts"><button class="pill small" type="button" data-act="att">Attended +1</button><button class="pill small gray" type="button" data-act="miss">Missed +1</button></div>' +
+        '<div class="line"><span class="muted">If I skip the next</span><span class="stepper"><button type="button" data-act="wi-" aria-label="Fewer">−</button><span>' + k + '</span><button type="button" data-act="wi+" aria-label="More">+</button></span><span class="muted">I’ll be at <b class="' + (after >= p ? 'ok' : 'bad') + '">' + fmt(after) + '%</b></span></div>' +
+        term +
+        '<div class="fields"><label>Attended<input type="number" min="0" data-f="attended" value="' + s.attended + '" inputmode="numeric"></label><label>Held<input type="number" min="0" data-f="held" value="' + s.held + '" inputmode="numeric"></label><label>Left this sem<input type="number" min="0" data-f="remaining" value="' + (s.remaining == null ? '' : s.remaining) + '" placeholder="' + (rem && rem.basis !== 'typed' ? 'about ' + rem.n : '?') + '" inputmode="numeric"></label></div>' +
+        '<div><button class="textlink" type="button" data-act="del" style="color:var(--red)">Remove Subject</button></div>' +
+      '</div></div></div></div>';
+  }
+
+  $$('[data-step]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = b.dataset.step, d = +b.dataset.d;
+      state[f] = f === 'cutoff' ? Math.min(100, Math.max(1, state.cutoff + d)) : Math.min(20, Math.max(0, state.reserve + d));
+      save(); render();
+    });
+  });
+  $$('[data-rule]').forEach(function (b) { b.addEventListener('click', function () { state.rule = b.dataset.rule; save(); render(); }); });
+  function findSubj(el) { var c = el.closest('.row'); return c && state.subjects.find(function (s) { return s.id === c.dataset.id; }); }
+  $('#list').addEventListener('click', function (e) {
+    if (e.target.closest('[data-pick]')) { $('#file').click(); return; }
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var s = findSubj(b); if (!s) return;
+    var act = b.dataset.act;
+    if (act === 'open') { open[s.id] = !open[s.id]; var rowEl = b.closest('.row'); rowEl.classList.toggle('open', open[s.id]); b.setAttribute('aria-expanded', String(open[s.id])); return; }
+    if (act === 'att') { s.attended++; s.held++; if (s.remaining > 0) s.remaining--; state.edits = (state.edits || 0) + 1; toast(s.name + ': attended'); }
+    else if (act === 'miss') { s.held++; if (s.remaining > 0) s.remaining--; state.edits = (state.edits || 0) + 1; toast(s.name + ': missed'); }
+    else if (act === 'wi+') whatIf[s.id] = (whatIf[s.id] || 0) + 1;
+    else if (act === 'wi-') whatIf[s.id] = Math.max(0, (whatIf[s.id] || 0) - 1);
+    else if (act === 'del') { state.subjects = state.subjects.filter(function (x) { return x !== s; }); toast('Removed ' + s.name); }
+    save(); render();
+  });
+  $('#list').addEventListener('change', function (e) {
+    var f = e.target.dataset.f; if (!f) return;
+    var s = findSubj(e.target); if (!s) return;
+    if (f === 'remaining') s.remaining = e.target.value === '' ? null : int(e.target.value, 0, 999, 0);
+    else if (f === 'credits') s.credits = e.target.value === '' ? null : int(e.target.value, 0, 20, 0);
+    else if (f === 'extra') s.extra = int(e.target.value, 0, 999, 0);
+    else s[f] = int(e.target.value, 0, 9999, 0);
+    if (s.attended > s.held) s.held = s.attended;
+    if (f === 'attended' || f === 'held') state.edits = (state.edits || 0) + 1;
+    save(); render();
+  });
+
+  function toggle(btn, pane) {
+    btn.addEventListener('click', function () {
+      var show = pane.hidden;
+      $('#f-paste').hidden = true; $('#f-add').hidden = true;
+      pane.hidden = !show;
+      if (show) { var f = pane.querySelector('textarea, input'); if (f) f.focus(); }
+    });
+  }
+  toggle($('#t-paste'), $('#f-paste')); toggle($('#t-add'), $('#f-add'));
+  $('#pick').addEventListener('click', function () { $('#file').click(); });
+  $('#f-add').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('#add-name').value.trim(), a = int($('#add-a').value, 0, 9999, 0), t = int($('#add-t').value, 0, 9999, 0);
+    if (!name) return;
+    state.subjects.push(mk(name, a, Math.max(a, t))); save(); render(); e.target.reset(); toast('Added ' + name);
+  });
+  $('#read-paste').addEventListener('click', function () { review(P.parseRows($('#pasted').value), 'pasted text'); });
+
+  var dlg = $('#review');
+  function review(rows, source) {
+    pending = rows.map(function (r) { return { name: r.name, attended: r.attended, held: r.held, type: r.type, fixed: r.fixed, incomplete: !!r.incomplete, on: true }; });
+    var fixed = rows.filter(function (r) { return r.fixed && !r.incomplete; }).length, need = rows.filter(function (r) { return r.incomplete; }).length;
+    $('#rv-title').textContent = rows.length ? 'Check what we found' : 'Nothing found';
+    $('#rv-msg').textContent = !rows.length
+      ? 'No subject rows in your ' + source + '. Try a clearer screenshot of the Self Attendance Report, or add subjects by hand.'
+      : rows.length + ' subject' + (rows.length > 1 ? 's' : '') + ' from your ' + source + '.' +
+        (need ? ' ' + need + ' need' + (need > 1 ? '' : 's') + ' numbers from you (in red).' : '') +
+        (fixed ? ' ' + fixed + ' misread number' + (fixed > 1 ? 's were' : ' was') + ' corrected from the percentage column (in orange).' : '') +
+        ' Compare with the portal before saving.';
+    $('#rv-save').hidden = !rows.length;
+    $('#rv-body').innerHTML = pending.map(function (r, i) {
+      var cls = r.incomplete ? 'need' : r.fixed ? 'flag' : '';
+      var why = r.incomplete ? 'Couldn’t read the numbers. Type them in.' : r.fixed === 'unsure' ? 'Numbers don’t match the percentage. Check them.' : r.fixed ? 'Corrected ' + r.fixed + ' from the percentage.' : '';
+      return '<tr data-i="' + i + '" class="' + cls + '"><td><input type="checkbox" data-r="on" checked aria-label="Include"></td>' +
+        '<td><input type="text" data-r="name" value="' + esc(r.name) + '">' + (why ? '<span class="why">' + why + '</span>' : '') + '</td>' +
+        '<td><input type="number" min="0" data-r="attended" value="' + (r.attended == null ? '' : r.attended) + '"></td>' +
+        '<td><input type="number" min="0" data-r="held" value="' + (r.held == null ? '' : r.held) + '"></td></tr>';
+    }).join('');
+    checkReady();
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+  }
+  // Save stays off until every ticked row has real numbers (attended no more than held).
+  function checkReady() {
+    var bad = (pending || []).filter(function (r) { return r.on && !(Number.isInteger(r.attended) && Number.isInteger(r.held) && r.held > 0 && r.attended <= r.held); }).length;
+    $('#rv-save').disabled = bad > 0;
+    $('#rv-save').textContent = bad ? 'Fill in ' + bad + ' row' + (bad > 1 ? 's' : '') : 'Save';
+  }
+  $('#rv-body').addEventListener('input', function (e) {
+    var tr = e.target.closest('tr'), r = pending[+tr.dataset.i], k = e.target.dataset.r;
+    r[k] = k === 'on' ? e.target.checked : k === 'name' ? e.target.value : (e.target.value === '' ? null : int(e.target.value, 0, 9999, 0));
+    if (k === 'attended' || k === 'held') tr.className = '';
+    checkReady();
+  });
+  var key = function (n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); };
+  dlg.addEventListener('close', function () {
+    if (dlg.returnValue !== 'save' || !pending) { pending = null; return; }
+    var rows = pending.filter(function (r) { return r.on && r.name.trim(); }); pending = null;
+    var added = 0, updated = 0;
+    rows.forEach(function (r) {
+      var held = Math.max(r.attended, r.held), hit = state.subjects.find(function (s) { return key(s.name) === key(r.name); });
+      if (hit) { if (hit.remaining != null) hit.remaining = Math.max(0, hit.remaining - Math.max(0, held - hit.held)); hit.attended = r.attended; hit.held = held; if (r.type) hit.type = r.type; updated++; }
+      else { var n = mk(r.name.trim(), r.attended, held); n.type = r.type || null; state.subjects.push(n); added++; }
+    });
+    $('#pasted').value = ''; setStatus('');
+    if (added + updated) { state.syncedAt = new Date().toISOString(); state.edits = 0; } // fresh portal numbers
+    firstPaint = true; save(); render();
+    toast([added && added + ' added', updated && updated + ' updated'].filter(Boolean).join(', ') || 'Nothing saved');
+  });
+
+  function setStatus(msg, err, prog) {
+    var s = $('#status'); s.hidden = !msg; s.textContent = msg || ''; s.className = 'status' + (err ? ' error' : '');
+    var p = $('#progress'); p.hidden = prog == null; if (prog != null) p.firstElementChild.style.width = Math.round(prog * 100) + '%';
+  }
+  var tessLoading = null;
+  function loadTesseract() {
+    if (window.Tesseract) return Promise.resolve();
+    if (!tessLoading) tessLoading = new Promise(function (res, rej) {
+      var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+      sc.onload = res; sc.onerror = function () { tessLoading = null; rej(new Error('load')); }; document.head.appendChild(sc);
+    });
+    return tessLoading;
+  }
+  function toCanvas(src) {
+    return new Promise(function (res, rej) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = rej; i.src = src; }).then(function (img) {
+      var sc = Math.min(3, Math.max(1, 2200 / img.naturalWidth)), c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      var g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, c.width, c.height); return c;
+    });
+  }
+  function ocr(src) {
+    setStatus('Getting ready. The first time takes a few seconds.', false, 0.03);
+    return loadTesseract().then(function () {
+      return Tesseract.createWorker('eng', 1, { logger: function (m) { if (m.status === 'recognizing text') setStatus('Reading your screenshot…', false, 0.1 + m.progress * 0.9); } });
+    }).then(function (w) {
+      return w.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1' })
+        .then(function () { return toCanvas(src); }).then(function (c) { return w.recognize(c); })
+        .then(function (o) { w.terminate(); return o.data.text; }, function (err) { w.terminate(); throw err; });
+    });
+  }
+  function handleFile(file) {
+    if (!file || !/^image\//.test(file.type)) { setStatus('That file isn’t an image. Choose a PNG or JPG screenshot.', true); return; }
+    var url = URL.createObjectURL(file);
+    ocr(url).then(function (text) { setStatus(''); var rows = P.parseRows(text); if (!rows.length) $('#pasted').value = text; review(rows, 'screenshot'); })
+      .catch(function () { setStatus('Couldn’t read that screenshot. Try Paste table text or Add a subject.', true); })
+      .then(function () { URL.revokeObjectURL(url); });
+  }
+  $('#file').addEventListener('change', function (e) { handleFile(e.target.files[0]); e.target.value = ''; });
+  var drop = $('#drop');
+  ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (e) { handleFile(e.dataTransfer.files[0]); });
+  document.addEventListener('paste', function (e) {
+    if (!session || !state) return;
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    for (var i = 0; i < items.length; i++) if (/^image\//.test(items[i].type)) { e.preventDefault(); handleFile(items[i].getAsFile()); return; }
+  });
+
+  /* ---------- home: motion and the live demo ---------- */
+  if (!REDUCED) document.documentElement.classList.add('anim');
+
+  function countTo(el, to, dur) {
+    if (REDUCED) { el.textContent = to; return; }
+    var t0 = performance.now(); dur = dur || 1100;
+    (function step(now) { var k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e); if (k < 1) requestAnimationFrame(step); })(t0);
+  }
+  function fillRing(c) {
+    var C = parseFloat(c.getAttribute('stroke-dasharray')), pct = parseFloat(c.dataset.pct);
+    c.style.strokeDashoffset = (C * (1 - pct / 100)).toFixed(1);
+  }
+  // one-shot: when something scrolls into view, play its moment
+  var once = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (!e.isIntersecting) return; once.unobserve(e.target); e.target.__play(); });
+  }, { threshold: 0.35 }) : null;
+  function onView(el, fn) { el.__play = fn; if (once && !REDUCED) once.observe(el); else fn(); }
+
+  onView($('.phone'), function () {
+    setTimeout(function () { $$('.phone .demo-ring').forEach(fillRing); $$('.phone .count').forEach(function (c) { countTo(c, +c.dataset.to); }); }, 350);
+  });
+  $$('.hero-tile .count').forEach(function (c) { onView(c, function () { countTo(c, +c.dataset.to, 900); }); });
+
+  // scroll-linked: the phone straightens up, and the story section plays its three stages
+  var stage = $('#phone-stage');
+  function onScroll() {
+    if ($('[data-view="home"]').hidden) return;
+    var hp = REDUCED ? 1 : Math.min(1, Math.max(0, scrollY / Math.max(300, innerHeight * 0.55)));
+    stage.style.setProperty('--hp', hp.toFixed(3));
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  addEventListener('hashchange', function () { setTimeout(onScroll, 0); });
+
+  // tiles lean gently toward the pointer (mouse and trackpad only)
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches && !REDUCED) {
+    $$('.tilt').forEach(function (t) {
+      t.addEventListener('mousemove', function (e) {
+        var b = t.getBoundingClientRect(), x = (e.clientX - b.left) / b.width - 0.5, y = (e.clientY - b.top) / b.height - 0.5;
+        t.style.transform = 'perspective(900px) rotateY(' + (x * 6).toFixed(2) + 'deg) rotateX(' + (-y * 6).toFixed(2) + 'deg) translateY(-4px)';
+      });
+      t.addEventListener('mouseleave', function () { t.style.transform = ''; });
+    });
+  }
+
+  // try it: the real engine, live
+  var tryState = { a: 27, t: 31, cut: 80 };
+  function paintTry() {
+    var a = tryState.a, t = tryState.t, p = tryState.cut;
+    $('#try-a').textContent = a; $('#try-t').textContent = t;
+    $$('[data-try-cut]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.tryCut === p)); });
+    var r = E.analyseSubject({ attended: a, held: t }, p, 0), ring = $('#try-ring'), C = 389.6;
+    ring.style.strokeDashoffset = (C * (1 - Math.min(100, r.percent) / 100)).toFixed(1);
+    ring.setAttribute('stroke', COLOR[r.status]);
+    $('#try-pct').textContent = (Math.round(r.percent * 10) / 10) + '%';
+    var ans = $('#try-answer');
+    if (r.below) ans.innerHTML = '<b class="bad">Attend ' + r.attendToRecover + ' in a row.</b><span>That gets you back to ' + p + '%.</span>';
+    else if (r.spendable === 0) ans.innerHTML = '<b style="color:var(--orange)">Don’t skip the next one.</b><span>You’re right on the line.</span>';
+    else ans.innerHTML = 'You can skip <b class="ok">' + r.spendable + '</b> lecture' + (r.spendable === 1 ? '' : 's') + '.<span>And still be at ' + p + '% or more.</span>';
+  }
+  $$('[data-try]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var k = b.dataset.try, d = +b.dataset.d;
+      tryState[k] = Math.max(0, Math.min(200, tryState[k] + d));
+      if (tryState.a > tryState.t) { if (k === 'a') tryState.t = tryState.a; else tryState.a = tryState.t; }
+      if (tryState.t === 0) tryState.t = 1;
+      paintTry();
+    });
+  });
+  $$('[data-try-cut]').forEach(function (b) { b.addEventListener('click', function () { tryState.cut = +b.dataset.tryCut; paintTry(); }); });
+  onView($('.tryit'), paintTry);
+
+  /* ---------- notes library ---------- */
+  // Anyone can read; nothing here needs an account. Approved CRs and LRs (Supabase table class_reps)
+  // add subjects and material for their own class. Rules live in supabase/notes.sql.
+  var N = window.BunkNotes, NC = 'bb-notes-class';
+  var nb = { classes: null, cls: null, subjects: [], materials: [], reps: [], open: {}, flash: null, flashSub: null };
+  var CHEV = '<svg class="chev" width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l6 6-6 6"/></svg>';
+  var ICON_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M7 11H5v10h14V11h-2"/></svg>';
+  var ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+  var MAT_COLS = 'id,subject_id,kind,title,file_path,file_name,file_size,mime,link_url,uploaded_by,uploader_name,created_at';
+  function nGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function nPut(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function nq(p) { return A.withTimeout(p, 15000); }
+  function byName(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }); }
+  function nMissing(err) { var c = err && err.code || ''; return c === '42P01' || c === 'PGRST205' || /does not exist|schema cache/i.test(err && err.message || ''); }
+  function nOff(title, body) {
+    $('#n-off-t').textContent = title; $('#n-off-p').textContent = body;
+    $('#n-off').hidden = false; $('#n-pick').hidden = true; $('#n-class').hidden = true; $('#n-ask').hidden = true;
+  }
+  function nFail(err, what) {
+    if (nMissing(err)) nOff('Notes isn’t switched on yet.', 'Check back soon.');
+    else nOff('Can’t reach the notes right now.', 'Check your internet and try again.');
+    if (window.console) console.warn('Notes (' + what + '):', err && (err.message || err));
+  }
+  var nOfflineWarned = false;
+  function nOffline() { if (!nOfflineWarned) { nOfflineWarned = true; toast('You’re offline. Showing the last copy on this device.'); } }
+  function saveCache() { if (nb.cls) nPut('bb-notes:' + nb.cls.id, { subjects: nb.subjects, materials: nb.materials }); }
+
+  function startNotes() {
+    $('#n-off').hidden = true;
+    if (!A.client || !N) { nOff('Notes isn’t available right now.', 'Check your internet and reload the page.'); return; }
+    var r = N.parseRoute(location.hash) || {};
+    if (r.classId) { store(NC, r.classId); nb.flashSub = r.subjectId; nb.flash = r.materialId; history.replaceState(null, '', location.pathname + location.search + '#notes'); }
+    Promise.all([loadClasses(), loadReps()]).then(function (ok) {
+      if (!ok[0]) return;
+      var cid = store(NC), cls = cid && nb.classes.find(function (c) { return c.id === cid; });
+      if (r.classId && !cls) toast('That class isn’t on Bunk Budget yet.');
+      if (cls) openClass(cls); else showPicker();
+    });
+  }
+  function loadClasses(force) {
+    if (nb.classes && !force) return Promise.resolve(true);
+    function fallback(err) {
+      var c = nGet('bb-notes-classes');
+      if (c && !nMissing(err)) { nb.classes = c; nOffline(); return true; }
+      nFail(err, 'classes'); return false;
+    }
+    return nq(A.client.from('classes').select('id,program,year,division').eq('approved', true)).then(function (r) {
+      if (r.error) return fallback(r.error);
+      nb.classes = r.data || []; nPut('bb-notes-classes', nb.classes); return true;
+    }, fallback);
+  }
+  function loadReps() {
+    if (!session) { nb.reps = []; return Promise.resolve(); }
+    return nq(A.client.from('class_reps').select('class_id,role,display_name,approved,classes(id,program,year,division,approved)').eq('user_id', session.user.id))
+      .then(function (r) { nb.reps = r.error ? [] : (r.data || []); }, function () { nb.reps = []; });
+  }
+  function isLive(rep) { return rep.approved && rep.classes && rep.classes.approved; }
+  function myRep(cid) { return nb.reps.find(function (x) { return x.class_id === cid && isLive(x); }); }
+
+  /* pick a class */
+  function showPicker() {
+    nb.cls = null;
+    $('#n-pick').hidden = false; $('#n-class').hidden = true; $('#n-change').hidden = true; $('#n-label').textContent = '';
+    paintClasses(); paintAsk();
+  }
+  function paintClasses() {
+    var qv = $('#n-cq').value.trim(), list = N.filterClasses(nb.classes, qv);
+    $('#n-classes').innerHTML = list.length ? list.map(function (c) {
+      return '<div class="row n-classrow"><button class="row-main" type="button" data-cid="' + esc(c.id) + '"><span class="t"><b>' + esc(N.classLabel(c)) + '</b></span>' + CHEV + '</button></div>';
+    }).join('') : nb.classes.length
+      ? '<div class="empty"><b>No class matches “' + esc(qv) + '”.</b><p>Try fewer words, like just your program.</p></div>'
+      : '<div class="empty"><b>No classes yet.</b><p>When your CR or LR adds your class, it shows up here.</p></div>';
+  }
+  $('#n-cq').addEventListener('input', paintClasses);
+  $('#n-classes').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cid]'); if (!b) return;
+    var c = nb.classes.find(function (x) { return x.id === b.dataset.cid; });
+    if (c) { store(NC, c.id); openClass(c); scrollTo(0, 0); }
+  });
+  $('#n-change').addEventListener('click', function () { $('#n-cq').value = ''; showPicker(); });
+  $('#n-retry').addEventListener('click', function () { nb.classes = null; startNotes(); });
+
+  /* one class */
+  function openClass(cls) {
+    nb.cls = cls;
+    $('#n-pick').hidden = true; $('#n-class').hidden = false; $('#n-change').hidden = false; $('#n-off').hidden = true;
+    $('#n-label').textContent = N.classLabel(cls); $('#n-q').value = '';
+    var cached = nGet('bb-notes:' + cls.id);
+    if (cached && Array.isArray(cached.subjects)) { nb.subjects = cached.subjects; nb.materials = cached.materials || []; paintClass(); }
+    else { nb.subjects = []; nb.materials = []; $('#n-count').textContent = ''; $('#n-rep').hidden = true; $('#n-subjects').innerHTML = '<div class="empty"><p>Loading…</p></div>'; }
+    paintAsk();
+    var cid = cls.id;
+    function fail(err) { if (!nb.cls || nb.cls.id !== cid) return; if (cached) nOffline(); else nFail(err, 'class'); }
+    Promise.all([
+      nq(A.client.from('subjects').select('id,name,created_at').eq('class_id', cid)),
+      nq(A.client.from('materials').select(MAT_COLS).eq('class_id', cid).order('created_at', { ascending: false }))
+    ]).then(function (rs) {
+      if (!nb.cls || nb.cls.id !== cid) return;            // switched class meanwhile
+      var err = rs[0].error || rs[1].error;
+      if (err) { fail(err); return; }
+      nb.subjects = rs[0].data || []; nb.materials = rs[1].data || [];
+      saveCache(); paintClass(true);
+    }, fail);
+  }
+  // final: the fresh copy from the server; a shared link's file is highlighted only then,
+  // so the highlight isn't wiped when the fresh copy replaces this device's saved one.
+  function paintClass(final) {
+    var rep = myRep(nb.cls.id), by = {};
+    $('#n-rep').hidden = !rep; if (rep) $('#n-role').textContent = rep.role;
+    nb.materials.forEach(function (m) { (by[m.subject_id] = by[m.subject_id] || []).push(m); });
+    if (nb.flashSub) nb.open[nb.flashSub] = true;
+    var n = nb.materials.length;
+    $('#n-count').textContent = n ? n + (n === 1 ? ' file' : ' files') : '';
+    $('#n-subjects').innerHTML = nb.subjects.length ? nb.subjects.slice().sort(byName).map(function (s) { return subjectRow(s, by[s.id] || [], rep); }).join('')
+      : '<div class="empty"><b>Nothing here yet.</b><p>' + (rep ? 'Add your first subject above. Start with the syllabus: it’s what everyone asks for.' : 'Your CR or LR hasn’t added anything for this class yet.') + '</p></div>';
+    paintResults();
+    if (!final || !(nb.flash || nb.flashSub)) return;
+    var el = (nb.flash && document.querySelector('#n-subjects [data-mid="' + nb.flash + '"]')) || (nb.flashSub && document.querySelector('#n-subjects [data-sid="' + nb.flashSub + '"]'));
+    nb.flash = nb.flashSub = null;
+    if (el) {
+      setTimeout(function () { el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'center' }); if (el.classList.contains('n-item')) el.classList.add('flash'); }, 350);
+    }
+  }
+  function subjectRow(s, items, rep) {
+    var isOpen = !!nb.open[s.id];
+    var sub = items.length ? items.length + (items.length === 1 ? ' file' : ' files') + ' · ' + N.ago(items[0].created_at) : 'Nothing yet';
+    var body = N.groupByKind(items).map(function (g) {
+      return '<div class="n-kind"><h3>' + esc(g.label) + '</h3><div class="n-list">' + g.items.map(function (m) { return itemHtml(m); }).join('') + '</div></div>';
+    }).join('') || '<p class="n-empty">Nothing here yet.' + (rep ? ' Add the syllabus first.' : '') + '</p>';
+    var acts = '<div class="acts">' + (rep ? '<button class="pill small" type="button" data-act="up">Add File or Link</button>' : '') +
+      '<button class="pill small gray" type="button" data-act="share-sub">Share Subject</button>' +
+      (rep && !items.length ? '<button class="textlink" type="button" data-act="del-sub" style="color:var(--red)">Remove Subject</button>' : '') + '</div>';
+    return '<div class="row n-sub' + (isOpen ? ' open' : '') + '" data-sid="' + esc(s.id) + '">' +
+      '<button class="row-main" type="button" data-act="open" aria-expanded="' + isOpen + '"><span class="t"><b>' + esc(s.name) + '</b><small>' + esc(sub) + '</small></span>' + CHEV + '</button>' +
+      '<div class="detail"><div><div class="detail-in">' + acts + body + '</div></div></div></div>';
+  }
+  function fileType(m) {
+    if (m.link_url) return ['link', 'LINK'];
+    var e = N.ext(m.file_name || m.file_path);
+    if (e === 'pdf') return ['pdf', 'PDF'];
+    if (e === 'doc' || e === 'docx') return ['doc', 'DOC'];
+    if (e === 'ppt' || e === 'pptx') return ['ppt', 'PPT'];
+    return ['img', 'IMG'];
+  }
+  function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return 'link'; } }
+  function itemHtml(m, withSubject) {
+    var ft = fileType(m), mine = session && m.uploaded_by === session.user.id, meta = [];
+    if (withSubject) {
+      var s = nb.subjects.find(function (x) { return x.id === m.subject_id; });
+      if (s) meta.push(s.name);
+      meta.push(N.kindLabel(m.kind));
+    }
+    meta.push(m.link_url ? hostOf(m.link_url) : N.humanSize(m.file_size));
+    meta.push(N.ago(m.created_at));
+    if (m.uploader_name) meta.push(m.uploader_name);
+    var href = m.link_url || A.client.storage.from('notes').getPublicUrl(m.file_path).data.publicUrl;
+    return '<div class="n-item" data-mid="' + esc(m.id) + '"><span class="n-ico ' + ft[0] + '" aria-hidden="true">' + ft[1] + '</span>' +
+      '<a class="n-t" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"><b>' + esc(m.title) + '</b><small>' + esc(meta.join(' · ')) + '</small></a>' +
+      '<span class="n-acts"><button class="n-btn" type="button" data-act="share" aria-label="Share ' + esc(m.title) + '">' + ICON_SHARE + '</button>' +
+      (mine ? '<button class="n-btn del" type="button" data-act="del" aria-label="Delete ' + esc(m.title) + '">' + ICON_TRASH + '</button>' : '') + '</span></div>';
+  }
+  function paintResults() {
+    var qv = $('#n-q').value.trim();
+    $('#n-results').hidden = !qv; $('#n-subwrap').hidden = !!qv;
+    if (!qv) return;
+    var hits = N.search(nb.materials, nb.subjects, qv);
+    $('#n-rcount').textContent = hits.length + (hits.length === 1 ? ' match' : ' matches');
+    $('#n-rlist').innerHTML = hits.length ? '<div class="n-list">' + hits.map(function (m) { return itemHtml(m, true); }).join('') + '</div>'
+      : '<div class="empty"><b>No matches.</b><p>Try another word, like the unit number or “syllabus”.</p></div>';
+  }
+  $('#n-q').addEventListener('input', paintResults);
+
+  // Two taps to delete: the first turns the button red and asks, the second deletes.
+  function armed(b) {
+    if (b.dataset.armed) return true;
+    var html = b.innerHTML; b.dataset.armed = '1'; b.classList.add('arm');
+    b.textContent = b.classList.contains('n-btn') ? 'Delete?' : 'Tap again to remove';
+    setTimeout(function () { if (!b.isConnected) return; delete b.dataset.armed; b.classList.remove('arm'); b.innerHTML = html; }, 3000);
+    return false;
+  }
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+    return new Promise(function (res, rej) {
+      var ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); if (ok) res(); else rej();
+    });
+  }
+  // Phones get the share sheet (WhatsApp is one tap away); laptops copy the link.
+  function shareIt(url, title) {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) { navigator.share({ title: title, text: title + ' · on Bunk Budget', url: url }).catch(function () {}); return; }
+    copyText(url).then(function () { toast('Link copied. Paste it in your class group.'); }, function () { toast('Couldn’t copy the link. Copy it from the address bar instead.'); location.hash = url.split('#')[1]; });
+  }
+  $('#n-class').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b || !nb.cls) return;
+    var act = b.dataset.act, row = b.closest('[data-sid]'), item = b.closest('[data-mid]');
+    var s = row && nb.subjects.find(function (x) { return x.id === row.dataset.sid; });
+    var m = item && nb.materials.find(function (x) { return x.id === item.dataset.mid; });
+    if (act === 'open' && s) { nb.open[s.id] = !nb.open[s.id]; row.classList.toggle('open', nb.open[s.id]); b.setAttribute('aria-expanded', String(nb.open[s.id])); }
+    else if (act === 'share-sub' && s) shareIt(N.shareLink(location.href, nb.cls.id, s.id), s.name + ' · ' + N.classLabel(nb.cls));
+    else if (act === 'share' && m) shareIt(N.shareLink(location.href, nb.cls.id, m.subject_id, m.id), m.title + ' · ' + N.classLabel(nb.cls));
+    else if (act === 'up' && s) openUpload(s);
+    else if (act === 'del' && m && armed(b)) deleteMaterial(m);
+    else if (act === 'del-sub' && s && armed(b)) deleteSubject(s);
+  });
+  function deleteMaterial(m) {
+    nq(A.client.from('materials').delete().eq('id', m.id).select('id')).then(function (r) {
+      if (r.error || !r.data || !r.data.length) { toast('Couldn’t delete that. Try again.'); return; }
+      if (m.file_path) A.client.storage.from('notes').remove([m.file_path]).then(null, function () {});
+      nb.materials = nb.materials.filter(function (x) { return x !== m; }); saveCache(); paintClass(); toast('Deleted ' + m.title);
+    }, function () { toast('Can’t reach Bunk Budget. Try again.'); });
+  }
+  function deleteSubject(s) {
+    nq(A.client.from('subjects').delete().eq('id', s.id).select('id')).then(function (r) {
+      if (r.error || !r.data || !r.data.length) { toast('Couldn’t remove it. Delete its files first, then try again.'); return; }
+      nb.subjects = nb.subjects.filter(function (x) { return x !== s; }); saveCache(); paintClass(); toast('Removed ' + s.name);
+    }, function () { toast('Can’t reach Bunk Budget. Try again.'); });
+  }
+  $('#n-addsub').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('#n-subname').value.trim().replace(/\s+/g, ' '), btn = e.target.querySelector('button');
+    if (!name || !nb.cls) return;
+    btn.disabled = true;
+    nq(A.client.from('subjects').insert({ class_id: nb.cls.id, name: name }).select('id,name,created_at').single()).then(function (r) {
+      btn.disabled = false;
+      if (r.error) { toast(r.error.code === '23505' ? 'That subject is already there.' : r.error.code === '42501' ? 'Your CR/LR access isn’t switched on for this class.' : 'Couldn’t add it. Try again.'); return; }
+      nb.subjects.push(r.data); nb.open[r.data.id] = true; $('#n-subname').value = ''; saveCache(); paintClass(); toast('Added ' + r.data.name);
+    }, function () { btn.disabled = false; toast('Can’t reach Bunk Budget. Try again.'); });
+  });
+
+  /* add a file or link (approved reps only; the database checks this too) */
+  var upSub = null, upMode = 'file';
+  $('#n-kind').innerHTML = N ? N.KINDS.map(function (k) { return '<option value="' + k.id + '">' + k.label + '</option>'; }).join('') : '';
+  if (N) $('#n-file').setAttribute('accept', N.ACCEPT);
+  function upErr(m) { $('#n-uperr').textContent = m || ''; $('#n-uperr').hidden = !m; }
+  function setUpMode(mode) {
+    upMode = mode;
+    $$('#n-upmode [data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
+    $('#n-upfile').hidden = mode !== 'file'; $('#n-uplink').hidden = mode !== 'link'; upErr('');
+  }
+  $$('#n-upmode [data-mode]').forEach(function (b) { b.addEventListener('click', function () { setUpMode(b.dataset.mode); }); });
+  function openUpload(s) {
+    upSub = s; $('#n-upsub').textContent = s.name; $('#n-upform').reset(); setUpMode('file');
+    $('#n-kind').value = nb.materials.some(function (m) { return m.subject_id === s.id && m.kind === 'syllabus'; }) ? 'notes' : 'syllabus';
+    $('#n-upprog').hidden = true; $('#n-upgo').disabled = false; $('#n-upgo').textContent = 'Add';
+    $('#n-updlg').showModal();
+  }
+  $('#n-file').addEventListener('change', function () {
+    var f = this.files[0]; if (!f) return;
+    var c = N.checkFile(f); upErr(c.ok ? '' : c.error);
+    if (c.ok && !$('#n-title').value.trim()) $('#n-title').value = N.titleFromFile(f.name);
+  });
+  function upExplain(err) {
+    var m = ((err && (err.statusCode || err.code || '')) + ' ' + (err && err.message || '')).toLowerCase();
+    if (/row-level|42501|403|unauthorized/.test(m)) return 'Your CR/LR access isn’t switched on for this class yet.';
+    if (/too large|413|maximum allowed size/.test(m)) return 'That file is too big. The limit is 20 MB.';
+    if (/mime|415/.test(m)) return 'That type of file can’t be uploaded. Use a PDF, photo, Word or PowerPoint file.';
+    if (/timeout/.test(m)) return 'The upload is taking too long. Check your internet and try again.';
+    if (/fetch|network/.test(m)) return 'Can’t reach Bunk Budget. Check your internet and try again.';
+    return 'Couldn’t add it: ' + (err && err.message || 'unknown error');
+  }
+  $('#n-upform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!upSub || !nb.cls) return;
+    var sub = upSub, cls = nb.cls, f = $('#n-file').files[0], chk = null, path = null;
+    var row = { class_id: cls.id, subject_id: sub.id, kind: $('#n-kind').value, title: $('#n-title').value.trim().replace(/\s+/g, ' ') };
+    if (upMode === 'file') {
+      chk = N.checkFile(f); if (!chk.ok) { upErr(chk.error); return; }
+      if (!row.title) row.title = N.titleFromFile(f.name) || 'Untitled';
+    } else {
+      row.link_url = N.normaliseLink($('#n-link').value);
+      if (!row.link_url) { upErr('Paste a full link, like https://drive.google.com/…'); return; }
+      if (!row.title) { upErr('Give it a title, like “Unit 3 notes”.'); return; }
+    }
+    var go = $('#n-upgo'), bar = $('#n-upprog');
+    go.disabled = true; go.textContent = upMode === 'file' ? 'Uploading…' : 'Adding…'; upErr('');
+    var step = Promise.resolve();
+    if (upMode === 'file') {
+      path = N.storagePath(cls.id, sub.id, f.name, Math.random().toString(36).slice(2, 10));
+      bar.hidden = false; var i = bar.firstElementChild; i.style.transition = 'none'; i.style.width = '0';
+      requestAnimationFrame(function () { i.style.transition = 'width ' + Math.max(2, f.size / 400000).toFixed(1) + 's ease-out'; i.style.width = '90%'; });
+      step = A.withTimeout(A.client.storage.from('notes').upload(path, f, { contentType: chk.mime, cacheControl: '31536000', upsert: false }), 180000).then(function (r) {
+        if (r.error) throw r.error;
+        row.file_path = path; row.file_name = f.name; row.file_size = f.size; row.mime = chk.mime;
+      });
+    }
+    step.then(function () {
+      return nq(A.client.from('materials').insert(row).select(MAT_COLS).single()).then(function (r) {
+        if (r.error) { if (row.file_path) A.client.storage.from('notes').remove([row.file_path]).then(null, function () {}); throw r.error; }
+        return r.data;
+      });
+    }).then(function (m) {
+      if (nb.cls && nb.cls.id === cls.id) { nb.materials.unshift(m); nb.open[sub.id] = true; saveCache(); paintClass(); }
+      $('#n-updlg').close(); toast('Added. Tap Share to post the link in your group.');
+    }).catch(function (err) {
+      go.disabled = false; go.textContent = 'Add'; bar.hidden = true; upErr(upExplain(err));
+    });
+  });
+
+  /* become a CR or LR: a request you approve in Supabase */
+  var repRole = 'CR';
+  $$('#n-roleseg [data-role]').forEach(function (b) {
+    b.addEventListener('click', function () { repRole = b.dataset.role; $$('#n-roleseg [data-role]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
+  });
+  function repErr(m) { $('#n-reperr').textContent = m || ''; $('#n-reperr').hidden = !m; }
+  function openRepDialog() {
+    var list = N.sortClasses(nb.classes || []);
+    $('#n-rclass').innerHTML = '<option value="">Choose your class</option>' + list.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(N.classLabel(c)) + '</option>'; }).join('') + '<option value="new">My class isn’t listed</option>';
+    $('#n-rclass').value = nb.cls ? nb.cls.id : (list.length ? '' : 'new');
+    $('#n-newclass').hidden = $('#n-rclass').value !== 'new';
+    var progs = {}; list.forEach(function (c) { progs[c.program] = 1; });
+    $('#n-progs').innerHTML = Object.keys(progs).map(function (p) { return '<option value="' + esc(p) + '">'; }).join('');
+    repErr(''); $('#n-repsend').disabled = false; $('#n-repsend').textContent = 'Send Request';
+    $('#n-repdlg').showModal();
+  }
+  $('#n-rclass').addEventListener('change', function () { $('#n-newclass').hidden = this.value !== 'new'; if (this.value === 'new') $('#n-rprog').focus(); });
+  $('#n-repform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('#n-rname').value.trim().replace(/\s+/g, ' '), sel = $('#n-rclass').value;
+    var prog = $('#n-rprog').value.trim().replace(/\s+/g, ' '), yr = $('#n-ryear').value.trim(), div = $('#n-rdiv').value.trim();
+    if (name.length < 2) { repErr('Add your name, so your class knows who uploaded.'); return; }
+    if (!sel) { repErr('Choose your class.'); return; }
+    if (sel === 'new' && (prog.length < 2 || !yr)) { repErr('Add your program and year, like “B.Tech CSE” and “SY”.'); return; }
+    var btn = $('#n-repsend'); btn.disabled = true; btn.textContent = 'Sending…';
+    var classStep = sel === 'new'
+      ? nq(A.client.from('classes').insert({ program: prog, year: yr, division: div }).select('id').single()).then(function (r) { if (r.error) throw r.error; return r.data.id; })
+      : Promise.resolve(sel);
+    classStep.then(function (cid) {
+      return nq(A.client.from('class_reps').insert({ class_id: cid, role: repRole, display_name: name })).then(function (r) { if (r.error) throw r.error; });
+    }).then(function () {
+      $('#n-repdlg').close(); toast('Request sent. Uploads switch on once it’s checked.');
+      return loadReps().then(paintAsk);
+    }).catch(function (err) {
+      btn.disabled = false; btn.textContent = 'Send Request';
+      if (err && err.code === '23505') repErr(sel === 'new' ? 'Someone already asked for that class. It’ll appear in the list once it’s approved.' : 'You’ve already asked for this class.');
+      else repErr(A.explain(err));
+    });
+  });
+  $$('dialog [data-close]').forEach(function (b) { b.addEventListener('click', function () { b.closest('dialog').close(); }); });
+
+  // The CR/LR card at the bottom: one line, one button, changes with where the student stands.
+  function paintAsk() {
+    var box = $('#n-ask');
+    if (!$('#n-off').hidden || (nb.cls && myRep(nb.cls.id))) { box.hidden = true; return; }
+    var live = nb.reps.filter(isLive), waiting = nb.reps.filter(function (r) { return !isLive(r); });
+    var t = 'Are you a CR or LR?', p = 'Upload your class’s notes once. Then share one link instead of re-sending files on WhatsApp.', btn;
+    if (!session) btn = '<button class="pill small" type="button" data-ask="signin">Sign In to Upload</button>';
+    else if (live.length) { t = 'You’re the ' + live[0].role + ' of ' + N.classLabel(live[0].classes) + '.'; p = 'Switch to your class to add subjects and upload.'; btn = '<button class="pill small" type="button" data-ask="mine">Go to My Class</button>'; }
+    else if (waiting.length) { t = 'Your request is being checked.'; p = 'You asked to be the ' + waiting[0].role + ' of ' + (waiting[0].classes ? N.classLabel(waiting[0].classes) : 'a new class') + '. Uploads switch on once it’s approved.'; btn = '<button class="pill small gray" type="button" data-ask="req">Ask for Another Class</button>'; }
+    else btn = '<button class="pill small" type="button" data-ask="req">Upload for My Class</button>';
+    $('#n-ask-t').textContent = t; $('#n-ask-p').textContent = p; $('#n-ask-acts').innerHTML = btn;
+    box.hidden = false;
+  }
+  $('#n-ask-acts').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ask]'); if (!b) return;
+    if (b.dataset.ask === 'signin') { try { sessionStorage.setItem('bb-next', '#notes'); } catch (err) {} location.hash = '#signin'; }
+    else if (b.dataset.ask === 'req') openRepDialog();
+    else if (b.dataset.ask === 'mine') { var c = nb.reps.filter(isLive)[0].classes; store(NC, c.id); openClass(c); scrollTo(0, 0); }
+  });
+
+  /* ---------- boot ---------- */
+  if (!A.configured) { note('Sign-in isn’t switched on yet.', 'error'); }
+  if (A.client) A.client.auth.onAuthStateChange(function (event, s) {
+    if (event === 'PASSWORD_RECOVERY') showReset();
+  });
+  A.session().catch(function () { return null; }).then(function (s) {
+    session = s; afterSignIn();
+    var h0 = window.BB_HASH0 || '';
+    if (/error_code=|error=/.test(h0)) {                   // used or expired email link
+      location.replace('#signin'); route(); setMode('forgot');
+      note('That link has expired.', 'error', null, 'Email links work once and only for an hour. Send yourself a new one below.');
+    } else if (s && /type=recovery/.test(h0)) showReset(); // arriving from a reset email
+    else {
+      if (s && /access_token=/.test(location.hash + h0) && !recovering) location.replace('#app'); // arriving from a sign-up email
+      route();
+    }
+    onScroll();
+  });
+})();
+</script>
+</body>
+</html>
