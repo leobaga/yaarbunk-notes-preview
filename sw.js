@@ -3,7 +3,7 @@
  * Always tries the network first, so students get the newest version whenever they're online,
  * and falls back to the last copy it saw. Bump VERSION when shipping a new build.
  */
-var VERSION = 'bb-apple-v7';
+var VERSION = 'bb-apple-v8';
 var SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

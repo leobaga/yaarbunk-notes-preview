@@ -351,6 +351,25 @@ dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(4px); }
 .n-repbar { display: grid; gap: 12px; }
 .n-repbar b { font: 600 17px var(--display); }
 .n-repbar p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+/* account button in the top bar + the account page */
+.gnav nav a.me { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--blue); color: #fff; opacity: 1; font: 600 13px/1 var(--font); text-transform: uppercase; flex: none; }
+.gnav nav a.me.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--blue); }
+.gnav nav a.me[hidden] { display: none; }
+.ac-card { display: grid; gap: 12px; }
+.ac-card h2 { margin: 0; font: 600 21px/1.2 var(--display); }
+.ac-card > p { margin: -6px 0 0; color: var(--muted); font-size: 15px; }
+.ac-card .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ac-rep { display: flex; align-items: center; gap: 12px; padding: 12px 14px; flex-wrap: wrap; }
+.ac-rep + .ac-rep { border-top: 1px solid var(--sep); }
+.ac-rep .t { flex: 1; min-width: 12em; }
+.ac-rep .t b { display: block; font-weight: 500; }
+.ac-rep .t small { color: var(--muted); font-size: 14px; }
+.ac-rep .t small.ok { color: var(--green); }
+.ac-pw { position: relative; flex: 1; min-width: 12em; display: flex; }
+.ac-pw input { padding-right: 44px !important; }
+.ac-pw .eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+.ac-out { display: flex; justify-content: center; padding-top: 4px; }
+.ac-ok { color: var(--green); font-size: 14px; margin: 0; }
 .n-sub .detail-in { padding-left: 18px; gap: 14px; }
 .n-kind h3 { margin: 0 0 6px 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .n-list { background: var(--bg-2); border-radius: 14px; overflow: hidden; }
@@ -403,6 +422,7 @@ dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(4px); }
       <a class="opt" href="#about" data-nav="about">About</a>
       <a href="#notes" data-nav="notes">Notes</a>
       <a href="#app" data-nav="app" id="nav-app">Open app</a>
+      <a class="me" href="#account" data-nav="account" id="nav-me" aria-label="Your account" title="Your account" hidden></a>
     </nav>
   </div>
 </header>
@@ -542,7 +562,7 @@ dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(4px); }
     <div class="app wrap">
       <div class="app-head">
         <h1>Attendance</h1>
-        <div class="who"><span id="who"></span><a class="pill small" id="signin-link" href="#signin">Sign In</a><button class="pill gray small" id="signout" type="button" hidden>Sign Out</button></div>
+        <div class="who"><a id="who" href="#account" style="color:inherit"></a><a class="pill small" id="signin-link" href="#signin">Sign In</a><button class="pill gray small" id="signout" type="button" hidden>Sign Out</button></div>
       </div>
 
       <div class="synced" id="synced" hidden>
@@ -655,6 +675,40 @@ dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(4px); }
       <div class="card nudge" id="n-ask" hidden>
         <div><b id="n-ask-t">Are you a CR or LR?</b><p id="n-ask-p">Upload your class’s notes once. Then share one link instead of re-sending files on WhatsApp.</p></div>
         <div class="acts" id="n-ask-acts"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCOUNT: only when signed in -->
+  <section class="view" data-view="account" hidden>
+    <div class="app wrap">
+      <div class="app-head">
+        <h1>Account</h1>
+        <div class="who"><span id="ac-email"></span></div>
+      </div>
+      <div class="n-stack">
+        <div class="card ac-card">
+          <h2>Password</h2>
+          <p>Choose a new one. At least 8 characters. You’ll stay signed in.</p>
+          <form class="n-inline" id="ac-pwform" novalidate>
+            <input id="ac-user" type="email" autocomplete="username" hidden>
+            <span class="ac-pw"><input id="ac-pw" type="password" autocomplete="new-password" minlength="8" placeholder="New password" aria-label="New password"><button class="eye" type="button" data-for="ac-pw" aria-label="Show password"></button></span>
+            <button class="pill small" type="submit" id="ac-pwgo">Change Password</button>
+          </form>
+          <p class="n-err" id="ac-pwerr" role="alert" hidden></p>
+        </div>
+        <div class="card ac-card">
+          <h2>Notes</h2>
+          <p id="ac-reps-p">The classes you upload for as CR or LR.</p>
+          <div class="n-list" id="ac-reps"></div>
+          <div class="acts"><a class="pill small gray" href="#notes">Open Notes</a></div>
+        </div>
+        <div class="card ac-card">
+          <h2>Attendance</h2>
+          <p>Your numbers are saved to this account, so they’re on every device you sign in on.</p>
+          <div class="acts"><a class="pill small gray" href="#app">Open Your Attendance</a></div>
+        </div>
+        <div class="ac-out"><button class="pill gray" id="ac-signout" type="button">Sign Out</button></div>
       </div>
     </div>
   </section>
@@ -1265,8 +1319,9 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
   function route() {
     var v = (location.hash.replace('#', '').split(/[?&\/]/)[0]) || 'home';
     if (v === 'how') v = 'home';
-    if (['home', 'about', 'signin', 'app', 'notes'].indexOf(v) < 0) v = 'home';
+    if (['home', 'about', 'signin', 'app', 'notes', 'account'].indexOf(v) < 0) v = 'home';
     if (v === 'signin' && session && !recovering) { location.replace('#app'); return; }
+    if (v === 'account' && !session) { try { sessionStorage.setItem('bb-next', '#account'); } catch (e) {} location.replace('#signin'); return; }
     $$('[data-view]').forEach(function (s) { s.hidden = s.dataset.view !== v; });
     $$('[data-nav]').forEach(function (a) { a.classList.toggle('on', a.dataset.nav === v); });
     $('#nav-app').textContent = session ? 'Your attendance' : 'Open app';
@@ -1274,6 +1329,7 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
     else scrollTo(0, 0);
     if (v === 'app') startApp();
     if (v === 'notes') startNotes();
+    if (v === 'account') startAccount();
     reveal();
   }
   addEventListener('hashchange', route);
@@ -1346,14 +1402,27 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
       busy(false); note('You’re signed in, but this browser didn’t keep it.', 'error', null, 'If you’re in a private window or block site data, allow it for this site and try again.');
     });
   }
+  // A dropped connection ("Failed to fetch") is worth one quiet retry before showing an error.
+  // Seen when Chrome's password manager fills the form: the first request sometimes never leaves.
+  function dropped(err) {
+    var m = ((err && err.name || '') + ' ' + (err && err.message || '') + ' ' + (err && err.status === 0 ? 'status0' : '')).toLowerCase();
+    return /fetch|network|retryable|load failed|status0/.test(m);
+  }
+  function signInWithRetry(email, pw) {
+    function once() { return A.withTimeout(A.signIn(email, pw)); }
+    function again() { return new Promise(function (r) { setTimeout(r, 900); }).then(once); }
+    return once().then(function (r) { return r.error && dropped(r.error) ? again() : r; }, function (err) { if (dropped(err)) return again(); throw err; });
+  }
+  var retryAct = [{ label: 'Try Again', primary: true, onClick: function () { $('#f-main').requestSubmit(); } }];
   $('#f-main').addEventListener('submit', function (e) {
     e.preventDefault();
+    if ($('#submit').disabled) return;                   // already sending: ignore a second Enter or tap
     var email = A.normaliseEmail($('#email').value), pw = $('#password').value;
     if (!A.validEmail(email)) { note('Enter your email.', 'error', null, 'Like yourname@gmail.com, or just yourname for Gmail.'); return; }
     if (mode !== 'forgot' && pw.length < 8) { note('Use a password of at least 8 characters.', 'error'); return; }
     $('#email').value = email; busy(true); note('');
     if (mode === 'signin') {
-      A.withTimeout(A.signIn(email, pw)).then(function (r) {
+      signInWithRetry(email, pw).then(function (r) {
         if (!r.error) { enter(); return; }
         busy(false);
         var m = (r.error.code || r.error.message || '').toLowerCase();
@@ -1361,8 +1430,8 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
           { label: 'Create My Account', primary: true, onClick: function () { setMode('signup'); $('#f-main').requestSubmit(); } },
           { label: 'Reset Password', onClick: function () { setMode('forgot'); } }
         ], 'New here? Create your account with these same details in one tap. Already signed up? Reset your password.');
-        else note(A.explain(r.error), 'error');
-      }, function (err) { busy(false); note(A.explain(err), 'error'); });
+        else note(A.explain(r.error), 'error', dropped(r.error) ? retryAct : null);
+      }, function (err) { busy(false); note(A.explain(err), 'error', retryAct); });
       return;
     }
     if (mode === 'signup') {
@@ -1410,12 +1479,19 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
       toast('Password updated. You’re signed in.');
     });
   });
-  $('#signout').addEventListener('click', function () {
+  function signOutNow() {
     A.signOut().then(function () { session = null; afterSignIn(); appStarted = false; location.hash = '#home'; });
-  });
+  }
+  $('#signout').addEventListener('click', signOutNow);
+  // Everything on the page that shows whether you're signed in.
   function afterSignIn() {
-    $('#who').textContent = session ? session.user.email : '';
+    var email = session ? session.user.email : '';
+    $('#who').textContent = email;
     $('#signin-link').hidden = !!session; $('#signout').hidden = !session;
+    $('#nav-app').textContent = session ? 'Your attendance' : 'Open app';
+    var me = $('#nav-me'); me.hidden = !session; me.textContent = email ? email.charAt(0) : '';
+    me.title = session ? 'Your account (' + email + ')' : 'Your account';
+    if (!session && nb) nb.reps = [];
   }
 
   /* ---------- the tracker ---------- */
@@ -1905,11 +1981,12 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
     if (!A.client || !N) { nOff('Notes isn’t available right now.', 'Check your internet and reload the page.'); return; }
     var r = N.parseRoute(location.hash) || {};
     if (r.classId) { store(NC, r.classId); nb.flashSub = r.subjectId; nb.flash = r.materialId; history.replaceState(null, '', location.pathname + location.search + '#notes'); }
-    Promise.all([loadClasses(), loadReps()]).then(function (ok) {
+    Promise.all([loadClasses(true), loadReps()]).then(function (ok) {   // always fresh: a class approved meanwhile shows up
       if (!ok[0]) return;
       var cid = store(NC), cls = cid && nb.classes.find(function (c) { return c.id === cid; });
       if (r.classId && !cls) toast('That class isn’t on Bunk Budget yet.');
       if (cls) openClass(cls); else showPicker();
+      scheduleReps();
     });
   }
   function loadClasses(force) {
@@ -1924,13 +2001,47 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
       nb.classes = r.data || []; nPut('bb-notes-classes', nb.classes); return true;
     }, fallback);
   }
+  // Your CR/LR requests. Resolves true when something changed (e.g. you were just approved).
+  // A failed check keeps what we already knew, so a blip never makes an approved CR look like a guest.
+  function repsKey(list) { return JSON.stringify(list.map(function (x) { return [x.class_id, x.role, !!x.approved, !!(x.classes && x.classes.approved)]; })); }
   function loadReps() {
-    if (!session) { nb.reps = []; return Promise.resolve(); }
-    return nq(A.client.from('class_reps').select('class_id,role,display_name,approved,classes(id,program,year,division,approved)').eq('user_id', session.user.id))
-      .then(function (r) { nb.reps = r.error ? [] : (r.data || []); }, function () { nb.reps = []; });
+    if (!session) { nb.reps = []; return Promise.resolve(false); }
+    var uid = session.user.id;
+    return nq(A.client.from('class_reps').select('class_id,role,display_name,approved,classes(id,program,year,division,approved)').eq('user_id', uid))
+      .then(function (r) {
+        if (r.error || !session || session.user.id !== uid) return false;
+        var before = repsKey(nb.reps); nb.reps = r.data || []; return repsKey(nb.reps) !== before;
+      }, function () { return false; });
   }
   function isLive(rep) { return rep.approved && rep.classes && rep.classes.approved; }
   function myRep(cid) { return nb.reps.find(function (x) { return x.class_id === cid && isLive(x); }); }
+
+  // While a request is waiting, look again every 15 seconds and whenever the tab comes back,
+  // so an approval shows up by itself, without reloading or reopening the link.
+  var repTimer = null;
+  function viewOn(v) { var el = document.querySelector('[data-view="' + v + '"]'); return !!el && !el.hidden; }
+  function scheduleReps() {
+    clearTimeout(repTimer); repTimer = null;
+    if (session && document.visibilityState === 'visible' && (viewOn('notes') || viewOn('account')) && nb.reps.some(function (r) { return !isLive(r); }))
+      repTimer = setTimeout(refreshReps, 15000);
+  }
+  function refreshReps() {
+    if (!session || !(viewOn('notes') || viewOn('account'))) return;
+    var wasLive = nb.reps.filter(isLive).map(function (x) { return x.class_id; });
+    loadReps().then(function (changed) {
+      if (!changed) { scheduleReps(); return; }
+      var newly = nb.reps.filter(function (x) { return isLive(x) && wasLive.indexOf(x.class_id) < 0; });
+      var missing = newly.some(function (x) { return !(nb.classes || []).some(function (c) { return c.id === x.class_id; }); });
+      (missing ? loadClasses(true) : Promise.resolve()).then(function () {
+        if (viewOn('notes') && $('#n-off').hidden) { if (nb.cls) paintClass(); else paintClasses(); paintAsk(); }
+        if (viewOn('account')) paintAccount();
+        if (newly.length) toast('You’re approved as ' + newly[0].role + ' of ' + N.classLabel(newly[0].classes) + '. You can upload now.');
+        scheduleReps();
+      });
+    });
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') refreshReps(); else scheduleReps(); });
+  addEventListener('pageshow', function (e) { if (e.persisted) refreshReps(); });
 
   /* pick a class */
   function showPicker() {
@@ -2179,8 +2290,10 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
   function repErr(m) { $('#n-reperr').textContent = m || ''; $('#n-reperr').hidden = !m; }
   function openRepDialog() {
     var list = N.sortClasses(nb.classes || []);
-    $('#n-rclass').innerHTML = '<option value="">Choose your class</option>' + list.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(N.classLabel(c)) + '</option>'; }).join('') + '<option value="new">My class isn’t listed</option>';
-    $('#n-rclass').value = nb.cls ? nb.cls.id : (list.length ? '' : 'new');
+    // "Choose your class" is only a hint: it can't be picked. The class you're looking at (or last opened) starts selected.
+    $('#n-rclass').innerHTML = '<option value="" disabled hidden>Choose your class</option>' + list.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(N.classLabel(c)) + '</option>'; }).join('') + '<option value="new">My class isn’t listed</option>';
+    var last = nb.cls ? nb.cls.id : store(NC), known = list.some(function (c) { return c.id === last; });
+    $('#n-rclass').value = known ? last : (list.length ? '' : 'new');
     $('#n-newclass').hidden = $('#n-rclass').value !== 'new';
     var progs = {}; list.forEach(function (c) { progs[c.program] = 1; });
     $('#n-progs').innerHTML = Object.keys(progs).map(function (p) { return '<option value="' + esc(p) + '">'; }).join('');
@@ -2193,7 +2306,7 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
     var name = $('#n-rname').value.trim().replace(/\s+/g, ' '), sel = $('#n-rclass').value;
     var prog = $('#n-rprog').value.trim().replace(/\s+/g, ' '), yr = $('#n-ryear').value.trim(), div = $('#n-rdiv').value.trim();
     if (name.length < 2) { repErr('Add your name, so your class knows who uploaded.'); return; }
-    if (!sel) { repErr('Choose your class.'); return; }
+    if (!sel) { repErr('Pick your class from the list, or “My class isn’t listed”.'); $('#n-rclass').focus(); return; }
     if (sel === 'new' && (prog.length < 2 || !yr)) { repErr('Add your program and year, like “B.Tech CSE” and “SY”.'); return; }
     var btn = $('#n-repsend'); btn.disabled = true; btn.textContent = 'Sending…';
     var classStep = sel === 'new'
@@ -2203,7 +2316,7 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
       return nq(A.client.from('class_reps').insert({ class_id: cid, role: repRole, display_name: name })).then(function (r) { if (r.error) throw r.error; });
     }).then(function () {
       $('#n-repdlg').close(); toast('Request sent. Uploads switch on once it’s checked.');
-      return loadReps().then(paintAsk);
+      return loadReps().then(function () { paintAsk(); scheduleReps(); });
     }).catch(function (err) {
       btn.disabled = false; btn.textContent = 'Send Request';
       if (err && err.code === '23505') repErr(sel === 'new' ? 'Someone already asked for that class. It’ll appear in the list once it’s approved.' : 'You’ve already asked for this class.');
@@ -2221,7 +2334,7 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
     if (!session) btn = '<button class="pill small" type="button" data-ask="signin">Sign In to Upload</button>';
     else if (live.length) { t = 'You’re the ' + live[0].role + ' of ' + N.classLabel(live[0].classes) + '.'; p = 'Switch to your class to add subjects and upload.'; btn = '<button class="pill small" type="button" data-ask="mine">Go to My Class</button>'; }
     else if (waiting.length) { t = 'Your request is being checked.'; p = 'You asked to be the ' + waiting[0].role + ' of ' + (waiting[0].classes ? N.classLabel(waiting[0].classes) : 'a new class') + '. Uploads switch on once it’s approved.'; btn = '<button class="pill small gray" type="button" data-ask="req">Ask for Another Class</button>'; }
-    else btn = '<button class="pill small" type="button" data-ask="req">Upload for My Class</button>';
+    else { p = 'You’re signed in as ' + session.user.email + '. Ask to upload for your class. Every CR and LR is checked first.'; btn = '<button class="pill small" type="button" data-ask="req">Upload for My Class</button>'; }
     $('#n-ask-t').textContent = t; $('#n-ask-p').textContent = p; $('#n-ask-acts').innerHTML = btn;
     box.hidden = false;
   }
@@ -2232,13 +2345,76 @@ window.BUNK_CONFIG = { supabaseUrl: 'https://erzxgafxqamtxieicbvu.supabase.co', 
     else if (b.dataset.ask === 'mine') { var c = nb.reps.filter(isLive)[0].classes; store(NC, c.id); openClass(c); scrollTo(0, 0); }
   });
 
+  /* ---------- account ---------- */
+  function acErr(m) { $('#ac-pwerr').textContent = m || ''; $('#ac-pwerr').hidden = !m; }
+  function startAccount() {
+    $('#ac-email').textContent = session.user.email; $('#ac-user').value = session.user.email;
+    $('#ac-pw').value = ''; acErr('');
+    paintAccount();
+    loadReps().then(function () { paintAccount(); scheduleReps(); });
+  }
+  function paintAccount() {
+    var list = nb.reps;
+    $('#ac-reps-p').textContent = list.length ? 'The classes you upload for as CR or LR.' : 'You’re not a CR or LR of any class yet. If you are, ask from the Notes tab.';
+    $('#ac-reps').hidden = !list.length;
+    $('#ac-reps').innerHTML = list.map(function (r) {
+      var live = isLive(r), name = r.role + ' of ' + (r.classes ? N.classLabel(r.classes) : 'a new class');
+      return '<div class="ac-rep"><span class="t"><b>' + esc(name) + '</b>' +
+        (live ? '<small class="ok">Approved. You can upload.</small>' : '<small>Waiting to be checked.</small>') + '</span>' +
+        (live ? '<button class="pill small gray" type="button" data-ac="open" data-cid="' + esc(r.class_id) + '">Open Class</button>'
+              : '<button class="pill small gray" type="button" data-ac="withdraw" data-cid="' + esc(r.class_id) + '">Withdraw</button>') + '</div>';
+    }).join('');
+  }
+  $('#ac-reps').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ac]'); if (!b) return;
+    var cid = b.dataset.cid;
+    if (b.dataset.ac === 'open') { store(NC, cid); location.hash = '#notes'; return; }
+    if (!armed(b)) return;                                 // tap twice, so nothing goes by accident
+    b.disabled = true;
+    nq(A.client.from('class_reps').delete().eq('user_id', session.user.id).eq('class_id', cid)).then(function (r) {
+      if (r.error) throw r.error;
+      nb.reps = nb.reps.filter(function (x) { return x.class_id !== cid; });
+      paintAccount(); toast('Request withdrawn.');
+    }).catch(function (err) { b.disabled = false; toast(A.explain(err)); });
+  });
+  $('#ac-pwform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var pw = $('#ac-pw').value, go = $('#ac-pwgo');
+    if (go.disabled) return;
+    if (pw.length < 8) { acErr('Use a password of at least 8 characters.'); return; }
+    acErr(''); go.disabled = true; go.textContent = 'Saving…';
+    A.withTimeout(A.setPassword(pw)).then(function (r) {
+      go.disabled = false; go.textContent = 'Change Password';
+      if (r.error) { acErr(/same|different/i.test(r.error.message || '') ? 'That’s already your password. Pick a new one.' : A.explain(r.error)); return; }
+      $('#ac-pw').value = ''; toast('Password changed.');
+    }, function (err) { go.disabled = false; go.textContent = 'Change Password'; acErr(A.explain(err)); });
+  });
+  $('#ac-signout').addEventListener('click', signOutNow);
+
   /* ---------- boot ---------- */
   if (!A.configured) { note('Sign-in isn’t switched on yet.', 'error'); }
+  // Keep the page in step with sign-in changes that happen after load: a slow first check,
+  // a refreshed token, or signing in or out in another tab. (Supabase is never called inside
+  // this callback itself, which can lock it up.)
+  var booted = false, lateAuth;
+  function syncSession(s) {
+    var before = session ? session.user.id : null, after = s ? s.user.id : null;
+    session = s;
+    if (before === after) return;
+    afterSignIn(); nb.reps = [];
+    if (viewOn('notes')) startNotes();
+    else if (viewOn('account')) { if (s) startAccount(); else location.hash = '#home'; }
+    else if (viewOn('app')) appStarted = false;
+  }
   if (A.client) A.client.auth.onAuthStateChange(function (event, s) {
-    if (event === 'PASSWORD_RECOVERY') showReset();
+    if (event === 'PASSWORD_RECOVERY') { showReset(); return; }
+    if (!booted) { lateAuth = { s: s || null }; return; }
+    setTimeout(function () { syncSession(s || null); }, 0);
   });
   A.session().catch(function () { return null; }).then(function (s) {
+    if (!s && lateAuth && lateAuth.s) s = lateAuth.s;          // the first check timed out but Supabase answered meanwhile
     session = s; afterSignIn();
+    setTimeout(function () { booted = true; }, 0);
     var h0 = window.BB_HASH0 || '';
     if (/error_code=|error=/.test(h0)) {                   // used or expired email link
       location.replace('#signin'); route(); setMode('forgot');
